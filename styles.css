@@ -1,0 +1,73 @@
+/* CSS declarations go here */
+body {
+  background-color: black;
+  color: white;
+}
+
+.no-outline {
+  outline:0;
+}
+
+.primary-text {
+  font-size: 100px;
+  font-weight: 700;
+  width: 100%;
+  letter-spacing: .04em;
+  border: none;
+  background: 0 0;
+}
+
+.secondary-text {
+  font-size: 50px;
+  font-weight: 100;
+  width: 100%;
+  letter-spacing: .04em;
+  border: none;
+  background: 0 0;
+}
+
+.primary-button {
+  font-size: 50px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  background-color: black;
+  border-color: white;
+}
+
+.primary-button:hover, .primary-button:hover:focus {
+  background: white !important;
+  color: black;
+}
+
+.primary-button:focus {
+  background: black;
+  color: white;
+}
+
+.btn:focus, .btn:active:focus { outline: none; outline-style: none; }
+
+.frequency-list {
+  list-style-type: none;
+  padding:0; 
+  max-width: 400px;
+  float: none;
+  margin: 0 auto;
+}
+
+.frequency-list li {
+  background-color: white;
+  color: black;
+}
+
+.frequency-list li:hover {
+  background-color: black;
+  color: white;
+}
+
+.dashed-underline {
+  border-bottom: 1px dashed #999;
+}
+
+.input-error {
+  color: red;
+}

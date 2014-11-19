@@ -1,0 +1,23 @@
+<template name="commit.html">
+  <form name="commitForm" class="text-uppercase" ng-submit="commitctrl.submit()" novalidate>
+    <p class="text-center secondary-text">starting today,</p>
+    <label class="text-center primary-text">i vow to</label>
+    <input name="activity" class="text-uppercase text-center no-outline primary-text" type="text" placeholder="exercise" ng-model="tempActivity" ng-change="commitctrl.updateActivity()" required>
+    <div ng-show="commitctrl.activity && !commitctrl.frequency">
+      <ul class="text-center frequency-list">
+        <li class="secondary-text" ng-repeat="f in commitctrl.frequencies" ng-click="commitctrl.setFrequency(f)">[[f]]</li>
+      </ul>
+    </div>
+    <div ng-show="commitctrl.activity && commitctrl.frequency" class="text-center secondary-text">
+      <span ng-click="commitctrl.frequency = null;" style="font-weight: 700;">[[commitctrl.frequency]]</span>
+      <span>for the next </span>
+      <input name="duration" ng-class="{'input-error': commitctrl.duration && !commitctrl.isValidDuration(commitctrl.duration)}" class="text-uppercase text-center no-outline secondary-text" style="font-weight: 700; max-width: 8%" type="text" placeholder="5" ng-model="commitctrl.duration" required>
+      <span> weeks</span>
+    </div>
+    <br>
+    <div class="text-center" ng-show="commitctrl.activity && commitctrl.frequency && commitctrl.duration && commitctrl.isValidDuration(commitctrl.duration)">
+      <button ng-disabled="!commitForm.$valid" type="submit" class="btn primary-button text-uppercase">commit</button>
+    </div>
+  </form>
+  <br>
+</template>

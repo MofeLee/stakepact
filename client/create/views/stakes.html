@@ -1,0 +1,21 @@
+<template name="stakes.html">
+  <a ui-sref="create.commit">Back</a>
+  <p>Starting Today,</p>
+  <p>I vow to blah blah blah</p>
+  <button>put $$$ on the line</button>
+  <button ui-sref="create.notifications">no stakes</button>
+  <h1>put $$$ on the line</h1>
+  <p>If I don't succeed, my money will go to:</p>
+  <button>charity</button>
+  <button>anti-charity</button>
+  <h3>Search Charities</h3>
+  <search-directive></search-directive>
+  <form>
+    <label>the stakes: $</label>
+    <input type="number" placehoder="100">
+    <input type="text" placehoder="every week">
+    <p>*If you don't succeed in a given week, we will notify you that a donation is pending to Doctors Without Borders. We will give you 2 weeks to cancel the donation, after which time your donation will be processed. No backsies!</p>
+    <input type="checkbox">*I have read and agreed to the <span>terms and conditions</span>, and I understand that my credit card may be charged up to $500.
+    <a ui-sref="create.notifications"><button>Set Stakes</button></a>
+  </form>
+</template>
