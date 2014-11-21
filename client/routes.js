@@ -12,11 +12,13 @@ angular.module("app").run(function($rootScope, $state) {
     }
   });
 
-  // hack -- we need to wait for rootScope.currentUser to resolve before we deal with states
-  // also, this isn't very smart routing -- if you log in --> go to dashboard, if you log out --> go to create
+  // hacky -- we need to wait for rootScope.currentUser to resolve before we deal with states
+  // right now --> if you login on home page, redirect to dashboard
   $rootScope.$watch('currentUser', function(currentUser){
     if(currentUser) {
-      $state.go('dashboard');
+      if($state.current.name === 'create.commit'){
+        $state.go('dashboard');
+      }
     } else {
       $state.go('create.commit');
     }
@@ -78,13 +80,32 @@ angular.module("app").config(['$urlRouterProvider', '$stateProvider', '$location
         url: '/stakes',
         template: UiRouter.template('stakes.html'),
         controller: 'StakesCtrl',
-        controllerAs: 'stakesctrl'
+        controllerAs: 'stakesctrl',
+        resolve: {
+          commitmentString: function(commitService) {
+            return commitService.getCommitmentString();
+          },
+          stakes: function(stakesService) {
+            return stakesService.getStakes();
+          }
+        }
       })
       .state('create.notifications', {
         url: '/notifications',
         template: UiRouter.template('notifications.html'),
         controller: 'NotificationsCtrl',
-        controllerAs: 'notificationsctrl'
+        controllerAs: 'notificationsctrl',
+        resolve: {
+          commitment: function(commitService) {
+            return commitService.getCommitment();
+          },
+          stakes: function(stakesService){
+            return stakesService.getStakes();
+          },
+          notifications: function(notificationsService) {
+            return notificationsService.getNotificationSettings();
+          }
+        }
       })
       .state('error', {
         url: '/404',

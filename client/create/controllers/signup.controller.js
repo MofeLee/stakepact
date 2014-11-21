@@ -3,12 +3,13 @@
 
   angular.module('app').controller('SignupCtrl', SignupCtrl);
 
-  SignupCtrl.$inject = ['$log', '$scope', 'commitService'];
+  SignupCtrl.$inject = ['$log', '$scope', '$state', 'commitService', '$rootScope'];
 
-  function SignupCtrl($log, $scope, commitService){
+  function SignupCtrl($log, $scope, $state, commitService, $rootScope){
     var vm = this;
     vm.activate = activate;
     vm.commitment = null;
+    vm.loginWithFacebook = loginWithFacebook;
     vm.signup = signup;
 
     vm.activate();
@@ -31,8 +32,6 @@
         }, function(error){
           if(error) {
             console.log(error);
-          } else {
-            console.log(Meteor.user());
           }
         });
       }
@@ -45,11 +44,15 @@
       }, function(error) {
         if(error) {
           console.log(error);
-        } else {
-          console.log(Meteor.user());
         }
       });
     }
+
+    $rootScope.$watch('currentUser', function(currentUser){
+      if(currentUser) {
+        $state.go('create.stakes');
+      }
+    });
   }
 
 })();

@@ -11,7 +11,6 @@ body {
 .primary-text {
   font-size: 100px;
   font-weight: 700;
-  width: 100%;
   letter-spacing: .04em;
   border: none;
   background: 0 0;
@@ -20,7 +19,6 @@ body {
 .secondary-text {
   font-size: 50px;
   font-weight: 100;
-  width: 100%;
   letter-spacing: .04em;
   border: none;
   background: 0 0;
@@ -70,4 +68,56 @@ body {
 
 .input-error {
   color: red;
+}
+
+.search-header {
+  font-family: 'Source Sans Pro', "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-weight: 200;
+  font-size: 20px;
+}
+
+.search-list {
+  list-style-type: none;
+  padding:0;
+  float: none;
+  margin: 0 auto;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.search-list li:hover {
+  color: #428bca;
+}
+
+.accept {
+  color: green;
+}
+
+.lightgreen {
+  color: lightgreen;
+}
+
+.money {
+  color: green;
+}
+
+.money::-webkit-input-placeholder { /* WebKit browsers */
+  color: lightgreen;
+}
+
+.notification-selector {
+  padding: 5px;
+  background-color: black; 
+  color: gray;
+}
+
+.notification-selector:hover {
+  background-color: white; 
+  color: black;
+}
+
+.notification-selector-selected {
+  padding: 5px;
+  background-color: white; 
+  color: black;
 }

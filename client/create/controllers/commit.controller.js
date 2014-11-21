@@ -47,7 +47,11 @@
       if($scope.commitForm.$valid && vm.frequency) {
         // save the data to the collection with an anonymous user status ~> convert to real user and tag on data
         commitService.setCommitment(vm.activity, vm.frequency, vm.duration);
-        $state.go('create.signup');
+        if(Meteor.user()){
+          $state.go('create.stakes');
+        } else {
+          $state.go('create.signup');
+        }
       }
     }
 
@@ -58,7 +62,7 @@
         $timeout.cancel(timer);
       }
 
-      if(!$scope.activity) {
+      if(!vm.activity) {
         timer = $timeout(function(){
             /* run code*/
             vm.activity = $scope.tempActivity;
@@ -69,7 +73,6 @@
     }
 
     function isValidDuration(val) {
-      console.log(val);
       return isNumber(val) && parseInt(val) > 0 && parseInt(val) < 53;
     }
 
