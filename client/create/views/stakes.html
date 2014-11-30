@@ -1,7 +1,7 @@
 <template name="stakes.html">
   <div class="row">
     <div class="col-xs-2">
-      <a ui-sref="create.commit"><p class="text-uppercase secondary-text" style="font-size: 20px; padding-left: 20px"><span class="glyphicon glyphicon-chevron-left"></span> back</p></a>
+      <a ui-sref="create.commit"><p class="text-uppercase back-text"><span class="glyphicon glyphicon-chevron-left"></span> back</p></a>
     </div>
   </div>
   <div class="row text-center" ng-show="!stakesctrl.showStakes">
@@ -14,17 +14,17 @@
     <br>
     <br>
     <div class="row text-center">
-      <button class="btn primary-button text-uppercase" style="margin: 10px" ng-click="stakesctrl.showStakes = true;">put $$$ on the line</button>
-      <button class="btn primary-button text-uppercase" ng-click="stakesctrl.clearStakes()" style="margin: 10px">no stakes</button>
+      <button class="btn primary-button text-uppercase" style="margin: 1vw" ng-click="stakesctrl.showStakes = true;">set stakes</button>
+      <button class="btn primary-button text-uppercase" ng-click="stakesctrl.clearStakes()" style="margin: 1vw">no stakes</button>
     </div>
   </div>
   
   <div class="row text-center" ng-show="stakesctrl.showStakes">
-    <h1 class="text-uppercase primary-text">put $$$ on the line<a ng-click="stakesctrl.showStakes = false;"><sup><span class="glyphicon glyphicon-remove"> </span></sup></a></h1>
+    <h1 class="text-uppercase primary-text">set stakes<a ng-click="stakesctrl.showStakes = false;"><sup><span class="glyphicon glyphicon-remove"> </span></sup></a></h1>
     <p class="text-uppercase secondary-text">If I don't succeed, my money will go to:</p>
     <div ng-show='!stakesctrl.stakes.charityType'>
-      <button class="btn primary-button text-uppercase" style="margin: 20px" ng-click="stakesctrl.stakes.charityType = 'charity';">charity</button>
-      <button class="btn primary-button text-uppercase" style="margin: 20px" ng-click="stakesctrl.stakes.charityType = 'anti-charity';">anti-charity</button>
+      <button class="btn primary-button text-uppercase" style="margin: 1vw" ng-click="stakesctrl.stakes.charityType = 'charity';">charity</button>
+      <button class="btn primary-button text-uppercase" style="margin: 1vw" ng-click="stakesctrl.stakes.charityType = 'anti-charity';">anti-charity</button>
     </div>
   </div>
   <div class="row text-center" ng-show="stakesctrl.showStakes && stakesctrl.stakes.charityType">
@@ -32,15 +32,17 @@
     <div class="row" style="color: #bfbfbf;" ng-show="!selectedCharity">
       <h3 class="col-xs-12 text-uppercase search-header">search charities</h3>
       <div class="row text-center">
-        <span class="glyphicon glyphicon-search secondary-text"> </span>
-        <input edit-inline padding="20" type="text" name="charity" class="text-left secondary-text no-outline" ng-model="stakesctrl.search" style="color: white">
+        <div class="col-xs-12">
+          <label class="text-right secondary-text"><span class="glyphicon glyphicon-search"> </span></label>
+          <input edit-inline padding="20" type="text" name="charity" class="text-left secondary-text no-outline" ng-model="stakesctrl.search" style="color: white" placeholder="search">
+        </div>
       </div>
-      <h3 ng-show="stakesctrl.search" class="text-uppercase search-header">[[charities && filtered.length + ' matches' || 'no matches found']]</h3>
+      <h3 class="text-uppercase search-header">[[!stakesctrl.search && 'all charities' || (charities && filtered.length && filtered.length + ' matches') || 'no matches found']]</h3>
       <div class="row text-center text-uppercase secondary-text">
         <div class="col-xs-8 col-xs-offset-2">
           <ul class="search-list">
             <li class="col-xs-12 text-left" ng-repeat="charity in filtered = (charities | filter: {name: stakesctrl.search})">
-              <span ng-click="stakesctrl.selectCharity(charity);">[[charity.name]]</span> <a ng-show="charity.href" target="_blank" ng-href="[[charity.href]]" class="text-lowercase" style="font-size: 20px">website</a>
+              <span ng-click="stakesctrl.selectCharity(charity);">[[charity.name]]</span> <a ng-show="charity.href" target="_blank" ng-href="[[charity.href]]" class="text-lowercase" style="font-size: 2vw">website</a>
             </li>
           </ul>
         </div>
@@ -52,15 +54,66 @@
         <form name="stakesForm" ng-submit="stakesctrl.submit()" novalidate>
           <label class="text-uppercase secondary-text">the stakes:</label>
           <label class="text-uppercase primary-text" ng-class="{'input-error': stakesctrl.stakes.ammount && !stakesctrl.isValidAmmount(stakesctrl.stakes.ammount), 'money': stakesctrl.isValidAmmount(stakesctrl.stakes.ammount), 'lightgreen': !stakesctrl.stakes.ammount}"> $</label>
-          <input edit-inline type="text" class="text-uppercase text-left primary-text no-outline" ng-class="{'input-error': stakesctrl.stakes.ammount && !stakesctrl.isValidAmmount(stakesctrl.stakes.ammount), 'money': !stakesctrl.stakes.ammount || stakesctrl.isValidAmmount(stakesctrl.stakes.ammount)}" style="min-width: 200px" placeholder="100" ng-model="stakesctrl.stakes.ammount">
+          <input edit-inline type="text" class="text-uppercase text-left primary-text no-outline" ng-class="{'input-error': stakesctrl.stakes.ammount && !stakesctrl.isValidAmmount(stakesctrl.stakes.ammount), 'money': !stakesctrl.stakes.ammount || stakesctrl.isValidAmmount(stakesctrl.stakes.ammount)}" placeholder="100" ng-model="stakesctrl.stakes.ammount" maxlength="10">
           <label class="text-uppercase secondary-text">every week</label>
           <div class="row">
             <div class="col-xs-offset-3 col-xs-6 text-uppercase">
-              <p style="font-size: 20px">*If you don't succeed in a given week, we will notify you that a donation is pending to <span style="color: #428bca;">[[selectedCharity.name]]</span>. You have up to <span style="font-size: 30px;"><b>2 WEEKS</b></span> to cancel the donation, after which time your donation <span style="font-size: 30px;"><b>WILL BE PROCESSED WITHOUT REFUND</b></span>. No backsies!</p>
+              
               <br>
+
+              <!-- credit card -->
+              <div class="row">
+                <div class="col-xs-12" style="white-space: nowrap; border: 0.5vw solid transparent; height: 30vw; border-radius: 3vw; border-color: white;">
+                  <div class="row">
+                    <div class="col-xs-offset-1 col-xs-10">
+                      <div class="row">
+                        <div class="col-xs-12" style="height: 10vw">
+                          
+                        </div>
+                        <div class="col-xs-12">
+                          <input class="col-xs-3 text-left no-outline secondary-text" type="text" placeholder="0000" maxlength="4" style="padding-left: 1vw; padding-right: 1vw;">
+                          <input class="col-xs-3 text-left no-outline secondary-text" type="text" placeholder="0000" maxlength="4" style="padding-left: 1vw; padding-right: 1vw;">
+                          <input class="col-xs-3 text-left no-outline secondary-text" type="text" placeholder="0000" maxlength="4" style="padding-left: 1vw; padding-right: 1vw;">
+                          <input class="col-xs-3 text-left no-outline secondary-text" type="text" placeholder="0000" maxlength="4" style="padding-left: 1vw; padding-right: 1vw;">
+                        </div>
+                      </div>
+                      <div class="row">
+                        <div class="col-xs-12" style="height: 4vw">
+                          
+                        </div>
+                        <div class="col-xs-6">
+                          <div class="row">
+                            <div class="col-xs-12">
+                              <label class="tertiary-text text-left" style="padding-left: 1vw">valid thru:</label>
+                              <input class="tertiary-text no-outline text-left" type="text" placeholder="00" maxlength="2" style="max-width: 3vw">
+                              <label class="tertiary-text text-center">/</label>
+                              <input class="tertiary-text no-outline text-left" type="text" placeholder="00" maxlength="2" style="max-width: 3vw">
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="row">
+                        <div class="col-xs-12" style="height: 2vw">
+                          
+                        </div>
+                        <input style="padding-left: 2vw" class="col-xs-6 text-uppercase tertiary-text text-left no-outline" placeholder="name on card">
+                        <input style="padding-right: 3vw" class="col-xs-6 text-uppercase tertiary-text text-right no-outline" placeholder="zip code">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- end credit card -->
+
+              <br>
+              <br>
+
+              <p style="font-size: 1vw">*If you don't succeed in a given week, we will notify you that a donation is pending to [[selectedCharity.name]]. You have up to 2 weeks to cancel the donation, after which time your donation will be processed without refund. No backsies!</p>
+              <br>
+
               <div class="row">
                 <div class="btn col-xs-2 btn primary-button text-uppercase" ng-click="stakesctrl.acceptConditions = !stakesctrl.acceptConditions;"><span class="glyphicon glyphicon-ok" ng-class="{accept: stakesctrl.acceptConditions}"></span></div>
-                <p class="col-xs-10 text-left" style="font-size: 20px">*I have read and agreed to the <span>terms and conditions</span>, and I understand that my credit card may be charged up to $500.</p>
+                <p class="col-xs-10 text-left" style="font-size: 1vw">*I have read and agreed to the <span>terms and conditions</span>, and I understand that my credit card may be charged up to $500.</p>
               </div>
             </div>
           </div>

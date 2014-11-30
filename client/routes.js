@@ -7,19 +7,21 @@ angular.module("app").run(function($rootScope, $state) {
       e.preventDefault();
       // Optionally set option.notify to false if you don't want 
       // to retrigger another $stateChangeStart event
-      console.log(result);
+      console.log("shit2");
       $state.go(result.to, result.params, {notify: false});
     }
   });
 
   // hacky -- we need to wait for rootScope.currentUser to resolve before we deal with states
   // right now --> if you login on home page, redirect to dashboard
+  var userRequiredStates = ['create.stakes', 'create.notifications', 'dashboard'];
   $rootScope.$watch('currentUser', function(currentUser){
     if(currentUser) {
       if($state.current.name === 'create.commit'){
         $state.go('dashboard');
       }
-    } else {
+    } else if(userRequiredStates.indexOf($state.current.name) !== -1) {
+      console.log("shit");
       $state.go('create.commit');
     }
   });
@@ -60,9 +62,9 @@ angular.module("app").config(['$urlRouterProvider', '$stateProvider', '$location
         controllerAs: 'charityctrl'
       })
       .state('create', {
-          url: '',
-          abstract: true,
-          template: '<ui-view/>'
+        url: '',
+        abstract: true,
+        template: '<ui-view/>'
       })
       .state('create.commit', {
         url: '/commit',
@@ -95,6 +97,14 @@ angular.module("app").config(['$urlRouterProvider', '$stateProvider', '$location
         template: UiRouter.template('notifications.html'),
         controller: 'NotificationsCtrl',
         controllerAs: 'notificationsctrl',
+        data: {
+          rule: function(user) {
+            return !user && {
+              to: 'create.commit',
+              params: null
+            };
+          }
+        },
         resolve: {
           commitment: function(commitService) {
             return commitService.getCommitment();

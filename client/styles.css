@@ -4,12 +4,17 @@ body {
   color: white;
 }
 
+.back-text {
+  font-size: 1.5vw; 
+  padding-left: 1.5vw;
+}
+
 .no-outline {
   outline:0;
 }
 
 .primary-text {
-  font-size: 100px;
+  font-size: 7.5vw;
   font-weight: 700;
   letter-spacing: .04em;
   border: none;
@@ -17,7 +22,15 @@ body {
 }
 
 .secondary-text {
-  font-size: 50px;
+  font-size: 3vw;
+  font-weight: 100;
+  letter-spacing: .04em;
+  border: none;
+  background: 0 0;
+}
+
+.tertiary-text {
+  font-size: 2vw;
   font-weight: 100;
   letter-spacing: .04em;
   border: none;
@@ -25,7 +38,7 @@ body {
 }
 
 .primary-button {
-  font-size: 50px;
+  font-size: 3vw;
   font-weight: 800;
   letter-spacing: .04em;
   background-color: black;
@@ -47,7 +60,6 @@ body {
 .frequency-list {
   list-style-type: none;
   padding:0; 
-  max-width: 400px;
   float: none;
   margin: 0 auto;
 }
@@ -62,10 +74,6 @@ body {
   color: white;
 }
 
-.dashed-underline {
-  border-bottom: 1px dashed #999;
-}
-
 .input-error {
   color: red;
 }
@@ -73,7 +81,7 @@ body {
 .search-header {
   font-family: 'Source Sans Pro', "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-weight: 200;
-  font-size: 20px;
+  font-size: 2vw;
 }
 
 .search-list {
@@ -81,7 +89,7 @@ body {
   padding:0;
   float: none;
   margin: 0 auto;
-  max-height: 400px;
+  max-height: 40vw;
   overflow-y: auto;
 }
 

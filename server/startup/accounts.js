@@ -1,9 +1,11 @@
 // first, remove configuration entry in case service is already configured
+console.log(credentials);
+
 ServiceConfiguration.configurations.remove({
   service: "facebook"
 });
 ServiceConfiguration.configurations.insert({
   service: "facebook",
-  appId: "<APPID>",
-  secret: "<APPSECRET>"
+  appId: Meteor.settings.facebook.appId,
+  secret: Meteor.settings.facebook.secret
 });

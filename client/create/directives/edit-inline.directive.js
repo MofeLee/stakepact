@@ -3,6 +3,9 @@ angular.module('app').directive("editInline", function($window){
   // a method to update the width of an input
   // based on it's value.
     var updateWidth = function () {
+
+      var placeholder = attr.placeholder;
+
       // create a dummy span, we'll use this to measure text.
       var tester = angular.element('<span>'),
 
@@ -22,8 +25,15 @@ angular.module('app').directive("editInline", function($window){
         'text-transform': elemStyle.textTransform
       });
 
-      // update the text of the tester span
-      tester.text(element.val());
+      if(element.val()){
+        // update the text of the tester span
+        tester.text(element.val());
+      } else if(placeholder) {
+        tester.text(placeholder);
+      } else {
+        tester.text(element.val());
+      }
+      
 
       // put the tester next to the input temporarily.
       element.parent().append(tester);
@@ -47,6 +57,11 @@ angular.module('app').directive("editInline", function($window){
 
       // set an immediate timeout, so the value in
       // the input has updated by the time this executes.
+      $window.setTimeout(updateWidth, 0);
+    });
+
+    var w = angular.element($window);
+    w.bind('resize', function () {
       $window.setTimeout(updateWidth, 0);
     });
 

@@ -2,55 +2,72 @@
   <a ui-sref="create.stakes" class="text-uppercase">back</a>
   <div class="row text-uppercase text-left">
     <h3 class="col-xs-offset-2 text-left primary-text">reminders</h3>
-    <div class="col-xs-offset-2 col-xs-8 secondary-text">
-      <div class="btn col-xs-1 btn primary-button" ng-click="notificationsctrl.setReminders = !notificationsctrl.setReminders;">
-        <span class="glyphicon glyphicon-ok" ng-class="{accept: notificationsctrl.setReminders}"></span>
-      </div>
-      <p class="col-xs-11 text-left" style="font-size: 30px">send me reminders to [[notificationsctrl.commitment.activity]]</p>
+    <div class="row">
+      <div class="col-xs-offset-2 col-xs-8 secondary-text">
+        <div class="row">
+          <div class="col-xs-2">
+            <button class="btn primary-button col-xs-offset-2 col-xs-10" ng-click="notificationsctrl.setReminders = !notificationsctrl.setReminders;"><span class="glyphicon glyphicon-ok" ng-class="{accept: notificationsctrl.setReminders}"></span></button>
+          </div>
+          <div class="col-xs-8">
+            <p class="text-left tertiary-text">
+              send me reminders to [[notificationsctrl.commitment.activity]]
+            </p>
+          </div>
+        </div>
+        <div class="row text-left" ng-show="notificationsctrl.setReminders">
+          <br>
+          <div class="col-xs-offset-2 col-xs-10">
+            <p class="tertiary-text">remind me <span ng-class="{'notification-selector-selected': notificationsctrl.reminders.frequency === freq, 'notification-selector': notificationsctrl.reminders.frequency !== freq}" style="padding: 5px;" ng-repeat="freq in notificationsctrl.frequencies" ng-click="notificationsctrl.reminders.frequency = freq"><b>[[freq]]</b></span></p>
+            <p class="tertiary-text">remind me by 
+              <span ng-class="{'notification-selector-selected': notificationsctrl.reminders.contactType === contactType, 'notification-selector': notificationsctrl.reminders.contactType !== contactType}" style="padding: 5px;" ng-repeat="contactType in notificationsctrl.contactTypes" ng-click="notificationsctrl.reminders.contactType = contactType"><b>[[contactType]]</b></span>
+            </p>
 
-      <br>
-      <br>
-      <div class="col-xs-offset-1 col-xs-11 text-left" ng-show="notificationsctrl.setReminders">
-        <p style="font-size: 30px">alert me <span ng-class="{'notification-selector-selected': notificationsctrl.reminders.frequency === freq, 'notification-selector': notificationsctrl.reminders.frequency !== freq}" style="padding: 5px;" ng-repeat="freq in notificationsctrl.frequencies" ng-click="notificationsctrl.reminders.frequency = freq"><b>[[freq]]</b></span></p>
-        <p style="font-size: 30px">alert me by 
-          <span ng-class="{'notification-selector-selected': notificationsctrl.reminders.contactType === contactType, 'notification-selector': notificationsctrl.reminders.contactType !== contactType}" style="padding: 5px;" ng-repeat="contactType in notificationsctrl.contactTypes" ng-click="notificationsctrl.reminders.contactType = contactType"><b>[[contactType]]</b></span>
-        </p>
-
-        <div class="row" ng-show="notificationsctrl.reminders.contactType === 'text'">
-          <p class="col-xs-4" style="font-size: 30px;">phone number: </p>
-          <input class="col-xs-8 text-uppercase text-left no-outline secondary-text" style="font-size: 30px; font-weight: 700" type="tel" placeholder="your number" ng-model="notificationsctrl.phoneNumber">
+            <div class="row" ng-show="notificationsctrl.reminders.contactType === 'text'">
+              <label class="col-xs-4 tertiary-text text-left">phone number: </label>
+              <input class="col-xs-7 text-uppercase text-left no-outline tertiary-text" style="font-weight: 700; padding-left: 0" type="tel" placeholder="number" ng-model="notificationsctrl.phoneNumber" maxlength="20">
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="row text-uppercase text-left" >
-
-    <br>
-    <br>
-    <br>
-
-    <h3 class="col-xs-offset-2 text-left primary-text">alerts</h3>
-    <div class="col-xs-offset-2 col-xs-8 secondary-text">
-      <div class="btn col-xs-1 btn primary-button" ng-click="notificationsctrl.setAlerts = !notificationsctrl.setAlerts;"><span class="glyphicon glyphicon-ok" ng-class="{accept: notificationsctrl.setAlerts}"></span></div>
-      <p class="col-xs-8 text-left" style="font-size: 30px">send me alerts when I fail to report [[notificationsctrl.commitment.activity]] and scheduled to donate  to [[notificationsctrl.stakes.charityName]]</p>
-
-      <br>
-      <br>
-      <div class="col-xs-offset-1 col-xs-11 text-left" ng-show="notificationsctrl.setAlerts">
-        <p style="font-size: 30px">alert me <span ng-class="{'notification-selector-selected': notificationsctrl.alerts.frequency === freq, 'notification-selector': notificationsctrl.alerts.frequency !== freq}" style="padding: 5px;" ng-repeat="freq in notificationsctrl.frequencies" ng-click="notificationsctrl.alerts.frequency = freq"><b>[[freq]]</b></span></p>
-        <p style="font-size: 30px">alert me by 
-          <span ng-class="{'notification-selector-selected': notificationsctrl.alerts.contactType === contactType, 'notification-selector': notificationsctrl.alerts.contactType !== contactType}" style="padding: 5px;" ng-repeat="contactType in notificationsctrl.contactTypes" ng-click="notificationsctrl.alerts.contactType = contactType"><b>[[contactType]]</b></span>
-        </p>
-
-        <div class="row" ng-show="notificationsctrl.alerts.contactType === 'text'">
-          <p class="col-xs-4" style="font-size: 30px;">phone number: </p>
-          <input class="col-xs-8 text-uppercase text-left no-outline secondary-text" style="font-size: 30px; font-weight: 700" type="tel" placeholder="your number" ng-model="notificationsctrl.phoneNumber">
-        </div>
-      </div>
-    </div>
-  </div>
   <br>
+  <br>
+  <br>
+
+  <div class="row text-uppercase text-left">
+    <h3 class="col-xs-offset-2 text-left primary-text">alerts</h3>
+    <div class="row">
+      <div class="col-xs-offset-2 col-xs-8 secondary-text">
+        <div class="row">
+          <div class="col-xs-2">
+            <button class="btn primary-button col-xs-offset-2 col-xs-10" ng-click="notificationsctrl.setAlerts = !notificationsctrl.setAlerts;"><span class="glyphicon glyphicon-ok" ng-class="{accept: notificationsctrl.setAlerts}"></span></button>
+          </div>
+          <div class="col-xs-8">
+            <p class="text-left tertiary-text">
+              send me alerts when I fail to report [[notificationsctrl.commitment.activity]] and scheduled to donate to [[notificationsctrl.stakes.charityName]]
+            </p>
+          </div>
+        </div>
+        <div class="row text-left" ng-show="notificationsctrl.setAlerts">
+          <br>
+          <div class="col-xs-offset-2 col-xs-10">
+            <p class="tertiary-text">alert me <span ng-class="{'notification-selector-selected': notificationsctrl.alerts.frequency === freq, 'notification-selector': notificationsctrl.alerts.frequency !== freq}" style="padding: 5px;" ng-repeat="freq in notificationsctrl.frequencies" ng-click="notificationsctrl.alerts.frequency = freq"><b>[[freq]]</b></span></p>
+            <p class="tertiary-text">alert me by 
+              <span ng-class="{'notification-selector-selected': notificationsctrl.alerts.contactType === contactType, 'notification-selector': notificationsctrl.alerts.contactType !== contactType}" style="padding: 5px;" ng-repeat="contactType in notificationsctrl.contactTypes" ng-click="notificationsctrl.alerts.contactType = contactType"><b>[[contactType]]</b></span>
+            </p>
+
+            <div class="row" ng-show="notificationsctrl.alerts.contactType === 'text'">
+              <label class="col-xs-4 tertiary-text text-left">phone number: </label>
+              <input class="col-xs-7 text-uppercase text-left no-outline tertiary-text" style="font-weight: 700; padding-left: 0" type="tel" placeholder="number" ng-model="notificationsctrl.phoneNumber" maxlength="20">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <br>
   <br>
   <br>
@@ -61,7 +78,7 @@
   
   <br>
   
-  <div class="row text-uppercase text-center secondary-text" style="font-size: 30px">
+  <div class="row text-uppercase text-center tertiary-text">
     <p class="col-xs-offset-3 col-xs-6">*you can change these settings later if you're getting bugged too much, or not enough</p>
   </div>
   <br>

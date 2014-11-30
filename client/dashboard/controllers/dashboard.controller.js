@@ -3,10 +3,11 @@
 
   angular.module('app').controller('DashboardCtrl', DashboardCtrl);
 
-  DashboardCtrl.$inject = ['$log'];
+  DashboardCtrl.$inject = ['$scope', '$log'];
 
-  function DashboardCtrl($log){
+  function DashboardCtrl($scope, $log){
     var vm = this;
+
   }
 
 })();

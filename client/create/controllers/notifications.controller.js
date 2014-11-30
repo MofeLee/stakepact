@@ -3,9 +3,9 @@
 
   angular.module('app').controller('NotificationsCtrl', NotificationsCtrl);
 
-  NotificationsCtrl.$inject = ['$log', '$state', 'commitment', 'stakes', 'notifications', 'notificationsService'];
+  NotificationsCtrl.$inject = ['$log', '$scope', '$collection', '$state', 'commitment', 'stakes', 'notifications', 'notificationsService'];
 
-  function NotificationsCtrl($log, $state, commitment, stakes, notifications, notificationsService){
+  function NotificationsCtrl($log, $scope, $state, $collection, commitment, stakes, notifications, notificationsService){
     var vm = this;
     vm.activate = activate;
     vm.commitment = commitment;
