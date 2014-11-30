@@ -1,6 +1,4 @@
 // first, remove configuration entry in case service is already configured
-console.log(credentials);
-
 ServiceConfiguration.configurations.remove({
   service: "facebook"
 });

@@ -3,8 +3,6 @@ var wepay = Meteor.npmRequire('wepay').WEPAY;
 // local variables
 var wepay_settings = Meteor.settings.wepay;
 
-wp.use_staging(); // use staging environment (payments are not charged)
-
 var wp = new wepay(wepay_settings);
 wp.use_staging(); // use staging environment (payments are not charged)
 console.log(wp);
