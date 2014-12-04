@@ -27,7 +27,7 @@ angular.module("app").run(function($rootScope, $state) {
       if($rootScope.currentUser){
         $state.go('unauthorized');
       }else{
-        $state.go('create.signup', {redirect_sref: fromState.name}); 
+        $state.go('create.signup', {redirect_uri: $state.href(toState.name, toParams)}); 
       }
     }else{
       switch(toState.name) {
@@ -151,7 +151,7 @@ angular.module("app").config(['$urlRouterProvider', '$stateProvider', '$location
         controllerAs: 'commitctrl'
       })
       .state('create.signup', {
-        url: '/signup?redirect_sref',
+        url: '/signup?redirect_uri',
         template: UiRouter.template('signup.html'),
         controller: 'SignupCtrl',
         controllerAs: 'signupctrl',

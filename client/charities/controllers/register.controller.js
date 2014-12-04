@@ -1,9 +1,9 @@
 (function() {
   angular.module('app').controller('RegisterCtrl', RegisterCtrl);
 
-  RegisterCtrl.$inject = ['$log', '$state', '$scope', '$rootScope', '$collection', 'utilityService', 'isAuthorized'];
+  RegisterCtrl.$inject = ['$log', '$state', '$scope', '$collection', 'utilityService', 'authService'];
 
-  function RegisterCtrl($log, $state, $scope, $rootScope, $collection, utilityService, isAuthorized) {
+  function RegisterCtrl($log, $state, $scope, $collection, utilityService, authService) {
     var vm = this;
     vm.activate = activate;
     vm.isValidEIN = isValidEIN;
@@ -22,10 +22,14 @@
 
       // reroute user to signup if logout mid session
       $scope.$on('currentUser', function(currentUser){
-        if(!$rootScope.currentUser) {
-          console.log($state.current.name);
-          $state.go('create.signup', {'redirect_sref' : $state.current.name});
-        }
+        authService.getLoginStatus().then(
+          function(user){
+
+          },
+          function(error){
+            $state.go('create.signup', {'redirect_uri' : $state.current.url});
+          }
+        );
       });
     }
 

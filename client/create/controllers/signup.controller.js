@@ -3,9 +3,9 @@
 
   angular.module('app').controller('SignupCtrl', SignupCtrl);
 
-  SignupCtrl.$inject = ['$log', '$scope', '$state', '$stateParams', 'commitService', 'authService'];
+  SignupCtrl.$inject = ['$log', '$scope', '$location', '$state', '$stateParams', 'commitService', 'authService'];
 
-  function SignupCtrl($log, $scope, $state, $stateParams, commitService, authService){
+  function SignupCtrl($log, $scope, $location, $state, $stateParams, commitService, authService){
     var vm = this;
     vm.activate = activate;
     vm.commitment = null;
@@ -23,8 +23,8 @@
       $scope.$on('currentUser', function(){
         authService.getLoginStatus().then(
         function(){
-          if($stateParams.redirect_sref){
-            $state.go($stateParams.redirect_sref);
+          if($stateParams.redirect_uri){
+            $location.path($stateParams.redirect_uri);
           }else{
             $state.go('create.stakes');
           }
