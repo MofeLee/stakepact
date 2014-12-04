@@ -1,14 +1,46 @@
 angular.module("app").run(function($rootScope, $state) {
+  // avoid using stateChangeStart because you want to resolve things instead of using rules
+  // resolving is better for promises
+  // in this specific case, you want to wait for logging in to complete before checking for authorization
   $rootScope.$on('$stateChangeStart', function(e, to) {
     if (!to.data || !angular.isFunction(to.data.rule)) return;
-    var result = to.data.rule(Meteor.user());
+  });
 
-    if (result && result.to) {
-      e.preventDefault();
-      // Optionally set option.notify to false if you don't want 
-      // to retrigger another $stateChangeStart event
-      console.log("shit2");
-      $state.go(result.to, result.params, {notify: false});
+  // let the world know every time currentUser changes
+  $rootScope.$watch('currentUser', function(currentUser){
+    $rootScope.$broadcast('currentUser');
+  });
+
+  $rootScope.$on('$stateChangeError', function(event, toState, toParams, fromState, fromParams, error){ 
+    console.log(event);
+    console.log(toState);
+    console.log(toParams);
+    console.log(fromState);
+    console.log(fromParams);
+    console.log(error);
+
+    switch(toState.name) {
+      case 'create.signup':
+        if($rootScope.currentUser){
+          $state.go('dashboard');
+        }else{
+          $state.go('create.commit');
+        }
+        break;
+      case 'create.stakes':
+        $state.go('create.commit');
+        break;
+      case 'create.notifications':
+        $state.go('create.stakes');
+        break;
+      case 'charities.charity':
+        $state.go('unauthorized');
+        break;
+      case 'register':
+        $state.go('create.signup', {redirect_sref: 'register'});
+        break;
+      default :
+        $state.go('404');
     }
   });
 
@@ -17,11 +49,11 @@ angular.module("app").run(function($rootScope, $state) {
   var userRequiredStates = ['create.stakes', 'create.notifications', 'dashboard'];
   $rootScope.$watch('currentUser', function(currentUser){
     if(currentUser) {
+
       if($state.current.name === 'create.commit'){
         $state.go('dashboard');
       }
     } else if(userRequiredStates.indexOf($state.current.name) !== -1) {
-      console.log("shit");
       $state.go('create.commit');
     }
   });
@@ -40,26 +72,67 @@ angular.module("app").config(['$urlRouterProvider', '$stateProvider', '$location
         template: UiRouter.template('dashboard.html'),
         controller: 'DashboardCtrl',
         controllerAs: 'dashboardctrl',
-        data: {
-          rule: function(user) {
-            return !user && {
-              to: 'create.commit',
-              params: null
-            };
+        resolve: {
+          isAuthorized: function(authService){
+            var response = authService.getLoginStatus();
+            console.log(response);
+            return response;
           }
         }
       })
       .state('charities', {
         url: '/charities',
+        abstract: true,
+        template: '<ui-view/>'
+      })
+      .state('charities.list', {
+        url: '',
         template: UiRouter.template('charities-list.html'),
         controller: 'CharitiesListCtrl',
-        controllerAs: 'charitieslistctrl'
+        controllerAs: 'charitieslistctrl',
+        resolve: {
+          isAuthorized: function(authService){
+            return authService.getLoginStatus();
+          }
+        }
       })
-      .state('charity', {
-        url: '/charities/:charityId',
+      .state('charities.charity', {
+        url: '/:charityId',
         template: UiRouter.template('charity.html'),
         controller: 'CharityCtrl',
-        controllerAs: 'charityctrl'
+        controllerAs: 'charityctrl',
+        resolve: {
+          isAuthorized: function(authService){
+            return authService.getLoginStatus();
+          },
+          charity: function(authService, $subscribe, $stateParams, $q) {
+            var defer = $q.defer();
+
+            authService.getLoginStatus().then( function(){
+              $subscribe.subscribe("my_charities").then(function(){
+                var charity = Charities.find($stateParams.charityId).fetch();
+                if(charity && charity.length === 1) {
+                  defer.resolve();
+                } else {
+                  defer.reject({status: 401, description: 'unauthorized'});
+                }
+              });
+            });
+
+            return defer.promise;
+          }
+        }
+      })
+      .state('register', {
+        url: '/register',
+        template: UiRouter.template('register.html'),
+        controller: 'RegisterCtrl',
+        controllerAs: 'registerctrl',
+        resolve: {
+          isAuthorized: function(authService){
+            return authService.getLoginStatus();
+          }
+        }
       })
       .state('create', {
         url: '',
@@ -76,7 +149,19 @@ angular.module("app").config(['$urlRouterProvider', '$stateProvider', '$location
         url: '/signup',
         template: UiRouter.template('signup.html'),
         controller: 'SignupCtrl',
-        controllerAs: 'signupctrl'
+        controllerAs: 'signupctrl',
+        resolve: {
+          notLoggedIn: function($q, authService) {
+            var defer = $q.defer();
+            authService.getLoginStatus().then(function(currentUser){
+              defer.reject({status: 400, description: 'user already logged in'});
+            },
+            function(error){
+              defer.resolve();
+            });
+            return defer.promise;
+          }
+        }
       })
       .state('create.stakes', {
         url: '/stakes',
@@ -84,8 +169,21 @@ angular.module("app").config(['$urlRouterProvider', '$stateProvider', '$location
         controller: 'StakesCtrl',
         controllerAs: 'stakesctrl',
         resolve: {
-          commitmentString: function(commitService) {
-            return commitService.getCommitmentString();
+          isAuthorized: function(authService){
+            return authService.getLoginStatus();
+          },
+          commitmentString: function($q, commitService) {
+            var defer = $q.defer();
+
+            var commitmentString = commitService.getCommitmentString();
+            if(commitmentString) {
+              defer.resolve(commitmentString);
+            }
+            else {
+              defer.reject({status: 400, description: "missing commitmentString"});
+            }
+
+            return defer.promise;
           },
           stakes: function(stakesService) {
             return stakesService.getStakes();
@@ -97,27 +195,40 @@ angular.module("app").config(['$urlRouterProvider', '$stateProvider', '$location
         template: UiRouter.template('notifications.html'),
         controller: 'NotificationsCtrl',
         controllerAs: 'notificationsctrl',
-        data: {
-          rule: function(user) {
-            return !user && {
-              to: 'create.commit',
-              params: null
-            };
-          }
-        },
         resolve: {
-          commitment: function(commitService) {
-            return commitService.getCommitment();
+          isAuthorized: function(authService){
+            return authService.getLoginStatus();
           },
-          stakes: function(stakesService){
-            return stakesService.getStakes();
+          commitment: function($q, commitService) {
+            var defer = $q.defer;
+            var commitment = commitService.getCommitment();
+            if(stakes) {
+              defer.resolve(commitment);
+            } else {
+              defer.reject({status: 400, description: "missing commitment"});
+            }
+            return defer.promise;
+          },
+          stakes: function($q, stakesService){
+            var defer = $q.defer;
+            var stakes = stakesService.getStakes();
+            if(stakes) {
+              defer.resolve(stakes);
+            } else {
+              defer.reject({status: 400, description: "missing stakes"});
+            }
+            return defer.promise;
           },
           notifications: function(notificationsService) {
             return notificationsService.getNotificationSettings();
           }
         }
       })
-      .state('error', {
+      .state('unauthorized', {
+        url: '/401',
+        template: "<div>401 unauthorized</div>",
+      })
+      .state('404', {
         url: '/404',
         template: "<div>404</div>",
       });

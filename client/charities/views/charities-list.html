@@ -1,20 +1,21 @@
 <template name="charities-list.html">
-  Charities List
+  <h1>Charities List</h1>
+
+  <h3>Verified Charities</h3>
+
   <ul>
-    <li ng-repeat="charity in charities">
-      <a href="/charities/[[charity._id]]">[[charity.name]]</a>
+    <li ng-repeat="charity in charities | filter: { verified: true } ">
+      <a ui-sref="charities.charity({charityId: charity._id})">[[charity.name]]</a>
       <button ng-click="removeCharity(charity)">X</button>
     </li>
   </ul>
-  <form>
-    <label>Name</label>
-    <input ng-model="newParty.name">
-    <button ng-click="addCharity(newParty)">Add</button>
-  </form>
-  <button ng-click="testLogin()">Test</button>
+
+  <h3>Unverified Charities</h3>
+  
   <ul>
-    <li ng-repeat="user in users">
-      [[user]]
+    <li ng-repeat="charity in charities | filter: { verified: false } ">
+      <a ui-sref="charities.charity({charityId: charity._id})">[[charity.name]]</a>
+      <button ng-click="removeCharity(charity)">X</button>
     </li>
   </ul>
 </template>

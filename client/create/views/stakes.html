@@ -61,50 +61,55 @@
               
               <br>
 
-              <!-- credit card -->
-              <div class="row">
-                <div class="col-xs-12" style="white-space: nowrap; border: 0.5vw solid transparent; height: 30vw; border-radius: 3vw; border-color: white;">
-                  <div class="row">
-                    <div class="col-xs-offset-1 col-xs-10">
-                      <div class="row">
-                        <div class="col-xs-12" style="height: 10vw">
-                          
+              <!-- credit card html useful with whitelist version of wepay              
+              <form name="creditCardForm" ng-submit="submitCreditCard()" novalidate>
+                <div class="row">
+                  <div class="col-xs-12" style="white-space: nowrap; border: 0.5vw solid transparent; height: 30vw; border-radius: 3vw; border-color: white;">
+                    <div class="row">
+                      <div class="col-xs-offset-1 col-xs-10">
+                        <div class="row">
+                          <div class="col-xs-12" style="height: 10vw">
+                            
+                          </div>
+                          <div class="col-xs-12">
+                            <input name="cardNumber1" class="col-xs-3 text-left no-outline secondary-text" type="text" placeholder="0000" maxlength="4" style="padding-left: 1vw; padding-right: 1vw;">
+                            <input name="cardNumber2" class="col-xs-3 text-left no-outline secondary-text" type="text" placeholder="0000" maxlength="4" style="padding-left: 1vw; padding-right: 1vw;">
+                            <input name="cardNumber3" class="col-xs-3 text-left no-outline secondary-text" type="text" placeholder="0000" maxlength="4" style="padding-left: 1vw; padding-right: 1vw;">
+                            <input class="col-xs-3 text-left no-outline secondary-text" type="text" placeholder="0000" name="cardNumber4" maxlength="4" style="padding-left: 1vw; padding-right: 1vw;">
+                          </div>
                         </div>
-                        <div class="col-xs-12">
-                          <input class="col-xs-3 text-left no-outline secondary-text" type="text" placeholder="0000" maxlength="4" style="padding-left: 1vw; padding-right: 1vw;">
-                          <input class="col-xs-3 text-left no-outline secondary-text" type="text" placeholder="0000" maxlength="4" style="padding-left: 1vw; padding-right: 1vw;">
-                          <input class="col-xs-3 text-left no-outline secondary-text" type="text" placeholder="0000" maxlength="4" style="padding-left: 1vw; padding-right: 1vw;">
-                          <input class="col-xs-3 text-left no-outline secondary-text" type="text" placeholder="0000" maxlength="4" style="padding-left: 1vw; padding-right: 1vw;">
-                        </div>
-                      </div>
-                      <div class="row">
-                        <div class="col-xs-12" style="height: 4vw">
-                          
-                        </div>
-                        <div class="col-xs-6">
-                          <div class="row">
-                            <div class="col-xs-12">
-                              <label class="tertiary-text text-left" style="padding-left: 1vw">valid thru:</label>
-                              <input class="tertiary-text no-outline text-left" type="text" placeholder="00" maxlength="2" style="max-width: 3vw">
-                              <label class="tertiary-text text-center">/</label>
-                              <input class="tertiary-text no-outline text-left" type="text" placeholder="00" maxlength="2" style="max-width: 3vw">
+                        <div class="row">
+                          <div class="col-xs-12 text-right" style="height: 4vw">
+                            <label class="tertiary-text text-left" style="padding-left: 1vw; letter-spacing: .15em">cvv:</label>
+                            <input name="cvv" class="tertiary-text no-outline text-left" type="text" placeholder="000" maxlength="3" style="max-width: 6vw; padding-right: 2vw">
+                          </div>
+                          <div class="col-xs-6">
+                            <div class="row">
+                              <div class="col-xs-12">
+                                <label class="tertiary-text text-left" style="padding-left: 1vw; padding-right: 1vw">valid thru:</label>
+                                <input name="expirationMonth" class="tertiary-text no-outline text-left" type="text" placeholder="00" maxlength="2" style="max-width: 3vw">
+                                <label class="tertiary-text text-center">/</label>
+                                <input name="expirationYear" class="tertiary-text no-outline text-left" type="text" placeholder="00" maxlength="2" style="max-width: 3vw">
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                      <div class="row">
-                        <div class="col-xs-12" style="height: 2vw">
-                          
+                        <div class="row">
+                          <div class="col-xs-12" style="height: 2vw">
+                            
+                          </div>
+                          <input style="padding-left: 2vw" class="col-xs-6 text-uppercase tertiary-text text-left no-outline" name="name" placeholder="name on card">
+                          <input name="zip" style="padding-right: 3vw" class="col-xs-6 text-uppercase tertiary-text text-right no-outline" placeholder="zip code">
                         </div>
-                        <input style="padding-left: 2vw" class="col-xs-6 text-uppercase tertiary-text text-left no-outline" placeholder="name on card">
-                        <input style="padding-right: 3vw" class="col-xs-6 text-uppercase tertiary-text text-right no-outline" placeholder="zip code">
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-              <!-- end credit card -->
+              </form>
+              -->
 
+              <div class="col-xs-12" id="wepay_checkout"></div>
+              
               <br>
               <br>
 
@@ -124,4 +129,6 @@
     </div>
   </div>
   <br>
+
+  <!-- <script type="text/javascript" src="https://static.wepay.com/min/js/tokenization.v2.js"></script> -->
 </template>

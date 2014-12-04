@@ -3,9 +3,9 @@
 
   angular.module('app').controller('SignupCtrl', SignupCtrl);
 
-  SignupCtrl.$inject = ['$log', '$scope', '$state', 'commitService', '$rootScope'];
+  SignupCtrl.$inject = ['$log', '$scope', '$rootScope', '$state', '$stateParams', 'commitService'];
 
-  function SignupCtrl($log, $scope, $state, commitService, $rootScope){
+  function SignupCtrl($log, $scope, $rootScope, $state, $stateParams, commitService){
     var vm = this;
     vm.activate = activate;
     vm.commitment = null;
@@ -16,6 +16,17 @@
     
     function activate(){
       vm.commitmentString = commitService.getCommitmentString();
+
+      // reroute user on login/signup
+      $scope.$on('currentUser', function(){
+        if($rootScope.currentUser) {
+          console.log($stateParams);
+          if($stateParams.redirect_sref){
+            $state.go($stateParams.redirect_sref);
+          }else
+            $state.go('create.stakes');
+        }
+      });
     }
 
     // simple form validation
@@ -47,12 +58,6 @@
         }
       });
     }
-
-    $rootScope.$watch('currentUser', function(currentUser){
-      if(currentUser) {
-        $state.go('create.stakes');
-      }
-    });
   }
 
 })();

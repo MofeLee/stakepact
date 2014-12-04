@@ -29,7 +29,7 @@
     }
 
     function getCommitmentString() {
-      return commitment? "i vow to " + commitment.activity + " " + commitment.frequency + " for the next " + commitment.duration + " weeks": null;
+      return commitment? "I vow to " + commitment.activity + " " + commitment.frequency + " for the next " + commitment.duration + " weeks": null;
     }
   }
 })();
