@@ -19,7 +19,18 @@ angular.module("app").run(function($rootScope, $state) {
     console.log(fromParams);
     console.log(error);
 
-    switch(toState.name) {
+    // first check for authorization error
+    // if unauthorized and logged in, go to 401
+    // else go to signup and redirect after login
+      // note: if user logs in after redirect and is still unauthorized, redirect to 401 page
+    if(error.status === 401){
+      if($rootScope.currentUser){
+        $state.go('unauthorized');
+      }else{
+        $state.go('create.signup', {redirect_sref: fromState.name}); 
+      }
+    }else{
+      switch(toState.name) {
       case 'create.signup':
         if($rootScope.currentUser){
           $state.go('dashboard');
@@ -33,14 +44,9 @@ angular.module("app").run(function($rootScope, $state) {
       case 'create.notifications':
         $state.go('create.stakes');
         break;
-      case 'charities.charity':
-        $state.go('unauthorized');
-        break;
-      case 'register':
-        $state.go('create.signup', {redirect_sref: 'register'});
-        break;
       default :
         $state.go('404');
+      }
     }
   });
 
@@ -75,7 +81,6 @@ angular.module("app").config(['$urlRouterProvider', '$stateProvider', '$location
         resolve: {
           isAuthorized: function(authService){
             var response = authService.getLoginStatus();
-            console.log(response);
             return response;
           }
         }
@@ -146,7 +151,7 @@ angular.module("app").config(['$urlRouterProvider', '$stateProvider', '$location
         controllerAs: 'commitctrl'
       })
       .state('create.signup', {
-        url: '/signup',
+        url: '/signup?redirect_sref',
         template: UiRouter.template('signup.html'),
         controller: 'SignupCtrl',
         controllerAs: 'signupctrl',
@@ -226,7 +231,7 @@ angular.module("app").config(['$urlRouterProvider', '$stateProvider', '$location
       })
       .state('unauthorized', {
         url: '/401',
-        template: "<div>401 unauthorized</div>",
+        template: UiRouter.template('401.html'),
       })
       .state('404', {
         url: '/404',

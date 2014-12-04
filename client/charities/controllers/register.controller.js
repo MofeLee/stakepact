@@ -23,7 +23,8 @@
       // reroute user to signup if logout mid session
       $scope.$on('currentUser', function(currentUser){
         if(!$rootScope.currentUser) {
-          $state.go('create.signup', {redirect_sref : $state.current.name});
+          console.log($state.current.name);
+          $state.go('create.signup', {'redirect_sref' : $state.current.name});
         }
       });
     }

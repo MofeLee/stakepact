@@ -3,9 +3,9 @@
 
   angular.module('app').controller('SignupCtrl', SignupCtrl);
 
-  SignupCtrl.$inject = ['$log', '$scope', '$rootScope', '$state', '$stateParams', 'commitService'];
+  SignupCtrl.$inject = ['$log', '$scope', '$state', '$stateParams', 'commitService', 'authService'];
 
-  function SignupCtrl($log, $scope, $rootScope, $state, $stateParams, commitService){
+  function SignupCtrl($log, $scope, $state, $stateParams, commitService, authService){
     var vm = this;
     vm.activate = activate;
     vm.commitment = null;
@@ -16,16 +16,22 @@
     
     function activate(){
       vm.commitmentString = commitService.getCommitmentString();
+      console.log($state);
+      console.log($stateParams);
 
       // reroute user on login/signup
       $scope.$on('currentUser', function(){
-        if($rootScope.currentUser) {
-          console.log($stateParams);
+        authService.getLoginStatus().then(
+        function(){
           if($stateParams.redirect_sref){
             $state.go($stateParams.redirect_sref);
-          }else
+          }else{
             $state.go('create.stakes');
-        }
+          }
+        }, 
+        function(){
+          // user logged out -- this should never happen on this page
+        });
       });
     }
 
