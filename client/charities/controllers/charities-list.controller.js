@@ -1,31 +1,32 @@
 (function() {
   angular.module('app').controller('CharitiesListCtrl', CharitiesListCtrl);
 
-  CharitiesListCtrl.$inject = ['$log', '$collection', '$scope', '$rootScope'];
+  CharitiesListCtrl.$inject = ['$log', '$collection', '$scope', '$state', 'authService'];
 
-  function CharitiesListCtrl($log, $collection, $scope, $rootScope) {
-    $collection(Charities).bind($scope, 'charities', false, true);
+  function CharitiesListCtrl($log, $collection, $scope, $state, authService) {
+    var vm = this;
+    vm.activate = activate;
+    vm.removeCharity = removeCharity;
 
-    $scope.removeCharity = function(charity){
+    function activate(){
+      // reroute user to signup if logout mid session
+      $scope.$on('currentUser', function(currentUser){
+        authService.getLoginStatus().then(
+          function(user){
+
+          },
+          function(error){
+            $state.go('create.signup', {'redirect_uri' : $state.current.url});
+          }
+        );
+      });
+
+      // bind to Charities collection
+      $collection(Charities).bind($scope, 'charities', false, true);
+    }
+
+    function removeCharity(charity){
       Charities.remove({_id: charity._id});
-      //$scope.charities.splice($scope.charities.indexOf(charity), 1 );
-    };
-
-    $scope.testLogin = function(){
-      // $collection(Meteor.users).bind($scope, 'users', true, true);
-      // console.log($rootScope.currentUser);
-      //$rootScope.currentUser.profile = {test: "test"};
-      //$collection(Meteor.users).bindOne($scope, 'user', Meteor.user()._id, true, true);
-      // Meteor.users.update({_id:Meteor.user()._id}, {$set:{"profile":"dog"}});
-      // var email = "asdf@asdf.com";
-      // var password = "fdsafdsa";
-      // Meteor.loginWithPassword(email, password, function(err){
-      //   if (err) {
-      //     console.log(err);
-      //   } else {
-      //     console.log(Meteor);
-      //   }
-      // });
-    };
+    }
   }
 })();

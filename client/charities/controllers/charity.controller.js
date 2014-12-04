@@ -1,9 +1,9 @@
 (function() {
   angular.module('app').controller('CharityCtrl', CharityCtrl);
 
-  CharityCtrl.$inject = ['$rootScope', '$state', '$log', '$stateParams', '$collection', '$scope', 'angularLoad', 'wepayClientId', 'charity'];
+  CharityCtrl.$inject = ['$state', '$stateParams', '$collection', '$scope', 'angularLoad', 'wepayClientId', 'charity', 'authService'];
 
-  function CharityCtrl($rootScope, $state, $log, $stateParams, $collection, $scope, angularLoad, wepayClientId, charity) {
+  function CharityCtrl($state, $stateParams, $collection, $scope, angularLoad, wepayClientId, charity, authService) {
     var vm = this;
     vm.activate = activate;
     vm.buttonTriggered = false;
@@ -13,6 +13,17 @@
     /////////////////////
 
     function activate(){
+      $scope.$on('currentUser', function(currentUser){
+        authService.getLoginStatus().then(
+          function(user){
+
+          },
+          function(error){
+            $state.go('create.signup', {'redirect_uri' : $state.current.url});
+          }
+        );
+      });
+
       $collection(Charities).bindOne($scope, 'charity', $stateParams.charityId, false, true);
 
       // watch for changes to charity
