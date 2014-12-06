@@ -1,9 +1,9 @@
 (function() {
   angular.module('app').controller('RegisterCtrl', RegisterCtrl);
 
-  RegisterCtrl.$inject = ['$log', '$state', '$scope', '$collection', 'utilityService', 'authService'];
+  RegisterCtrl.$inject = ['$log', '$state', '$scope', '$subscribe', '$collection', 'utilityService', 'authService'];
 
-  function RegisterCtrl($log, $state, $scope, $collection, utilityService, authService) {
+  function RegisterCtrl($log, $state, $scope, $subscribe, $collection, utilityService, authService) {
     var vm = this;
     vm.activate = activate;
     vm.isValidEIN = isValidEIN;
@@ -24,7 +24,9 @@
       $scope.$on('currentUser', function(currentUser){
         authService.getLoginStatus().then(
           function(user){
-
+            $subscribe.subscribe("my_charities").then(function(){
+              $collection(Charities).bind($scope, 'charities', false, true);
+            });
           },
           function(error){
             $state.go('create.signup', {'redirect_uri' : $state.current.url});
@@ -49,11 +51,16 @@
           website: $scope.website,
           city: $scope.city,
           state: $scope.state.toUpperCase(),
-          ein: $scope.ein,
-          verified: true
+          ein: $scope.ein
         };
         console.log(charity);
-        $scope.charities.push(charity);
+        Charities.insert(charity, function(error, id){
+          if(!error){
+            console.log(id);
+          }else{
+            console.log(error);
+          }
+        });
         console.log($scope.charities);
       }
     }

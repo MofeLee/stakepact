@@ -96,8 +96,8 @@ angular.module("app").config(['$urlRouterProvider', '$stateProvider', '$location
         controller: 'CharitiesListCtrl',
         controllerAs: 'charitieslistctrl',
         resolve: {
-          isAuthorized: function(authService){
-            return authService.getLoginStatus();
+          isAuthorized: function(authService, adminRoles){
+            return authService.getLoginStatus(adminRoles);
           }
         }
       })

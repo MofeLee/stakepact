@@ -2,14 +2,15 @@
 Meteor.publish("charities", function(channel_name) {
   var channel = {};
   if(channel_name === "verified"){
-    channel = {verified: true};
+    channel = {verified: true, wepay: {$exists: true}};
   }
 
   if(Roles.userIsInRole(this.userId, ['manage-users','admin'])){
     return Charities.find(channel);
   }else {
-    // non-admin users can't see unverified charities
+    // non-admin users can't see unverified charities that don't have wepay accounts
     channel.verifed = true;
+    channel.wepay = {$exists: true};
     return Charities.find(channel, {fields: {name: 1, city: 1, state: 1, ein: 1, website: 1}});
   }
 });

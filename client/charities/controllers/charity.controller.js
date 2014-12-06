@@ -16,7 +16,10 @@
       $scope.$on('currentUser', function(currentUser){
         authService.getLoginStatus().then(
           function(user){
-
+            // confirm user can still view charity -- should never reach here, but just in case
+            if(!$scope.charity || $scope.charity.owner === user._id){
+              $state.go('create.signup', {'redirect_uri' : $state.current.url});
+            }
           },
           function(error){
             $state.go('create.signup', {'redirect_uri' : $state.current.url});
@@ -70,6 +73,10 @@
               if (data.code.length !== 0) {
                 // send the data to the server
                 data.redirect_uri = document.URL;
+                // Meteor.call('getWepayAccessToken', $scope.charity._id, data, function (error, result) {
+                //   console.log(error);
+                //   console.log(result);
+                // });
                 Meteor.call('getWepayAccessToken', $scope.charity._id, data, function (error, result) {
                   console.log(error);
                   console.log(result);

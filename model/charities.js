@@ -14,22 +14,40 @@ Schema.Contact = new SimpleSchema({
     type: String,
     label: 'phone',
     regEx: /^(?:(?:\+?1\s*(?:[.-]\s*)?)?(?:\(\s*([2-9]1[02-9]|[2-9][02-8]1|[2-9][02-8][02-9])\s*\)|([2-9]1[02-9]|[2-9][02-8]1|[2-9][02-8][02-9]))\s*(?:[.-]\s*)?)?([2-9]1[02-9]|[2-9][02-9]1|[2-9][02-9]{2})\s*(?:[.-]\s*)?([0-9]{4})(?:\s*(?:#|x\.?|ext\.?|extension)\s*(\d+))?$/
+  },
+  createdAt: {
+    type: Date,
+      autoValue: function() {
+        if (this.isInsert) {
+          return new Date();
+        } else if (this.isUpsert) {
+          return {$setOnInsert: new Date()};
+        } else {
+          this.unset();
+        }
+      }
+  },
+  updatedAt: {
+    type: Date,
+    autoValue: function() {
+      if (this.isUpdate) {
+        return new Date();
+      }
+    },
+    denyInsert: true,
+    optional: true
   }
 });
 
 Schema.WePay = new SimpleSchema({
-  user_id: {
+  account_id: {
     type: Number,
-    label: "user_id",
+    label: "account_id",
   }, 
   access_token: {
     type: Object,
     optional: true,
     blackbox: true
-  }, 
-  token_type: {
-    type: String,
-    label: "token_type"
   }
 });
 
@@ -120,7 +138,7 @@ Charities.attachSchema(Schema.Charity);
 
 Charities.allow({
   insert: function (userId, charity) {
-    console.log('inserting' + charity.name);
+    console.log('inserting ' + charity.name);
     return userId && (charity.owner === userId || Roles.userIsInRole(userId, ['manage-users','admin']));
   },
   update: function (userId, charity, fields, modifier) {
