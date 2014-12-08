@@ -147,16 +147,16 @@ Schema.Commitment = new SimpleSchema({
 Commitments = new Mongo.Collection("commitments");
 
 Commitments.allow({
-  insert: function (userId, goal) {
-    console.log('inserting' + goal.name);
-    return userId && (goal.owner === userId || Roles.userIsInRole(userId, ['manage-users','admin']));
+  insert: function (userId, commitment) {
+    console.log('inserting' + commitment.name);
+    return userId && (commitment.owner === userId || Roles.userIsInRole(userId, ['manage-users','admin']));
   },
-  update: function (userId, goal, fields, modifier) {
-    console.log('updating ' + goal.name);
-    return userId && (goal.owner === userId || Roles.userIsInRole(userId, ['manage-users','admin']));
+  update: function (userId, commitment, fields, modifier) {
+    console.log('updating ' + commitment.name);
+    return userId && (commitment.owner === userId || Roles.userIsInRole(userId, ['manage-users','admin']));
   },
-  remove: function (userId, goal) {
-    console.log('removing ' + goal.name);
-    return userId && (goal.owner === userId || Roles.userIsInRole(userId, ['manage-users','admin']));
+  remove: function (userId, commitment) {
+    console.log('removing ' + commitment.name);
+    return userId && (commitment.owner === userId || Roles.userIsInRole(userId, ['manage-users','admin']));
   }
 });

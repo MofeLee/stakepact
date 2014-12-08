@@ -5,6 +5,7 @@
 
   function utilityService($log){
     var service = {
+      convertToEIN: convertToEIN,
       isNumber: isNumber,
       isValidEIN: isValidEIN,
       isValidPhoneNumber: isValidPhoneNumber,
@@ -13,6 +14,12 @@
     return service;
 
     ///////////////////
+
+    function convertToEIN(n){
+      var stripped = n.replace(/\D/g,'');
+      console.log(stripped);
+      return stripped.slice(0,2) + '-' + stripped.slice(2);
+    }
 
     function isNumber(n){
       return !isNaN(parseFloat(n)) && isFinite(n);

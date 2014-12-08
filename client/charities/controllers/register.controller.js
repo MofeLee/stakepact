@@ -16,6 +16,7 @@
     vm.activate();
 
     //////////////////
+    utilityService.convertToEIN('000000000');
 
     function activate() {
       console.log(Charities);
@@ -51,7 +52,7 @@
           website: $scope.website,
           city: $scope.city,
           state: $scope.state.toUpperCase(),
-          ein: $scope.ein
+          ein: utilityService.convertToEIN($scope.ein)
         };
         console.log(charity);
         Charities.insert(charity, function(error, id){

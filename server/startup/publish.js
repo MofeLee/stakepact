@@ -1,3 +1,5 @@
+//////////// commitments
+
 // server: publish the charity collection with barebones info, unless admin
 Meteor.publish("charities", function(channel_name) {
   var channel = {};
@@ -18,4 +20,21 @@ Meteor.publish("charities", function(channel_name) {
 // server: publish the charities created by the user, minus secret wepay info.
 Meteor.publish("my_charities", function() {
   return Charities.find({owner: this.userId}, {fields: {wepay: 0}});
+});
+
+
+//////////// commitments
+
+// server: publish the commitments created by the user
+Meteor.publish("my_commitments", function() {
+  return Commitments.find({owner: this.userId});
+});
+
+// server: publish all the commitments for admin only
+Meteor.publish("commitments", function(channel_name) {
+  var channel = {};
+  
+  if(Roles.userIsInRole(this.userId, ['manage-users','admin'])){
+    return Charities.find(channel);
+  }
 });

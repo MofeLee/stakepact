@@ -48,6 +48,28 @@ Schema.WePay = new SimpleSchema({
     type: Object,
     optional: true,
     blackbox: true
+  },
+  createdAt: {
+    type: Date,
+      autoValue: function() {
+        if (this.isInsert) {
+          return new Date();
+        } else if (this.isUpsert) {
+          return {$setOnInsert: new Date()};
+        } else {
+          this.unset();
+        }
+      }
+  },
+  updatedAt: {
+    type: Date,
+    autoValue: function() {
+      if (this.isUpdate) {
+        return new Date();
+      }
+    },
+    denyInsert: true,
+    optional: true
   }
 });
 
@@ -145,9 +167,8 @@ Charities.allow({
     console.log('updating ' + charity.name);
     return userId && (charity.owner === userId || Roles.userIsInRole(userId, ['manage-users','admin']));
   },
-  remove: function (userId, charity) {
-    console.log('removing ' + charity.name);
-    return userId && (charity.owner === userId || Roles.userIsInRole(userId, ['manage-users','admin']));
+  remove: function (userId, charity) {  // only remove a charity once wepay account is removed
+    return !charity.wepay && userId && Roles.userIsInRole(userId, ['manage-users','admin']);
   }
 });
 

@@ -1,12 +1,13 @@
 (function() {
   angular.module('app').controller('CharityCtrl', CharityCtrl);
 
-  CharityCtrl.$inject = ['$state', '$stateParams', '$collection', '$scope', 'angularLoad', 'wepayClientId', 'charity', 'authService'];
+  CharityCtrl.$inject = ['$window', '$state', '$stateParams', '$collection', '$scope', 'angularLoad', 'wepayClientId', 'charity', 'authService'];
 
-  function CharityCtrl($state, $stateParams, $collection, $scope, angularLoad, wepayClientId, charity, authService) {
+  function CharityCtrl($window, $state, $stateParams, $collection, $scope, angularLoad, wepayClientId, charity, authService) {
     var vm = this;
     vm.activate = activate;
     vm.buttonTriggered = false;
+    vm.setWepayUpdate = setWepayUpdate;
 
     vm.activate();
 
@@ -73,11 +74,7 @@
               if (data.code.length !== 0) {
                 // send the data to the server
                 data.redirect_uri = document.URL;
-                // Meteor.call('getWepayAccessToken', $scope.charity._id, data, function (error, result) {
-                //   console.log(error);
-                //   console.log(result);
-                // });
-                Meteor.call('getWepayAccessToken', $scope.charity._id, data, function (error, result) {
+                Meteor.call('createWePayAccount', $scope.charity._id, data, function (error, result) {
                   console.log(error);
                   console.log(result);
                 });
@@ -91,6 +88,22 @@
       }).catch(function(error) {
         // There was some error loading the script. Meh
         console.log(error);
+      });
+    }
+
+    function setWepayUpdate(){
+      Meteor.call('getWePayUpdateURI', $scope.charity._id, document.URL, function(error, result){
+        if(error){
+          console.log(error);
+        }else{
+          console.log(result);
+          angularLoad.loadScript("https://www.wepay.com/min/js/iframe.wepay.js").then(function() {
+            $window.location.href = result.uri;
+          }).catch(function(error) {
+            // There was some error loading the script. Meh
+            console.log(error);
+          });
+        }
       });
     }
   }

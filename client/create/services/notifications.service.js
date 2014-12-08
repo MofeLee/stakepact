@@ -6,7 +6,7 @@
   notificationsService.$inject = [];
 
   function notificationsService(){
-    var notifactionSettings = null;
+    var notificationStettings = null;
     var service = {
       getNotificationSettings: getNotificationSettings,
       setNotificationSettings: setNotificationSettings
@@ -15,11 +15,12 @@
     return service;
 
     function getNotificationSettings(){
-      return notifactionSettings;
+      return notificationStettings;
     }
 
     function setNotificationSettings(settings){
-      notifactionSettings = settings;
+      notificationStettings = settings;
+      return notificationStettings;
     }
   }
 })();

@@ -83,6 +83,11 @@ Schema.User = new SimpleSchema({
     type: Object,
     optional: true,
     blackbox: true
+  },
+
+  commitments: {
+    type: [String],
+    optional: true
   }
 });
 
