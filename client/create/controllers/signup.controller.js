@@ -8,7 +8,6 @@
   function SignupCtrl($log, $scope, $location, $state, $stateParams, commitService, authService){
     var vm = this;
     vm.activate = activate;
-    vm.commitment = null;
     vm.loginWithFacebook = loginWithFacebook;
     vm.signup = signup;
 
@@ -23,6 +22,10 @@
       $scope.$on('currentUser', function(){
         authService.getLoginStatus().then(
         function(){
+          if($stateParams.create_commitment && commitment){
+            commitService.uploadCommitment();
+          }
+
           if($stateParams.redirect_uri){
             $location.path($stateParams.redirect_uri);
           }else{

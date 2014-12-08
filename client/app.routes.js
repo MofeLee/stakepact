@@ -151,7 +151,7 @@ angular.module("app").config(['$urlRouterProvider', '$stateProvider', '$location
         controllerAs: 'commitctrl'
       })
       .state('create.signup', {
-        url: '/signup?redirect_uri',
+        url: '/signup?redirect_uri&create_commitment',
         template: UiRouter.template('signup.html'),
         controller: 'SignupCtrl',
         controllerAs: 'signupctrl',
@@ -169,7 +169,7 @@ angular.module("app").config(['$urlRouterProvider', '$stateProvider', '$location
         }
       })
       .state('create.stakes', {
-        url: '/stakes',
+        url: '/stakes?create_commitment',
         template: UiRouter.template('stakes.html'),
         controller: 'StakesCtrl',
         controllerAs: 'stakesctrl',

@@ -30,8 +30,8 @@ Meteor.methods({
     // check for authorization to update charity
     var loggedInUser = Meteor.user();
     if (!loggedInUser ||
-        !Roles.userIsInRole(loggedInUser, ['manage-users','admin']) || 
-        !charityObject.owner || charityObject.owner != loggedInUser._id) {
+        (!Roles.userIsInRole(loggedInUser, ['manage-users','admin']) && 
+        (!charityObject.owner || charityObject.owner != loggedInUser._id))) {
       throw new Meteor.Error(403, "Access denied");
     }
 
@@ -106,6 +106,14 @@ Meteor.methods({
       throw Meteor.error("bad-request", "arguments not properly configured");
     } else {
 
+      // check for authorization to create stakes and update commitment
+      var loggedInUser = Meteor.user();
+      if (!loggedInUser ||
+          (!Roles.userIsInRole(loggedInUser, ['manage-users','admin']) && 
+          (!commitment.owner || commitment.owner != loggedInUser._id))) {
+        throw new Meteor.Error(403, "Access denied");
+      }
+
       var fut = new Future();
 
       charityObject = Charities.findOne({_id: charity});
@@ -164,8 +172,8 @@ Meteor.methods({
       // check for authorization to update charity
       var loggedInUser = Meteor.user();
       if (!loggedInUser ||
-          !Roles.userIsInRole(loggedInUser, ['manage-users','admin']) || 
-          !charityObject.owner || charityObject.owner != loggedInUser._id) {
+          (!Roles.userIsInRole(loggedInUser, ['manage-users','admin']) && 
+          (!charityObject.owner || charityObject.owner != loggedInUser._id))) {
         throw new Meteor.Error(403, "Access denied");
       }
 
@@ -232,8 +240,8 @@ Meteor.methods({
       // check for authorization to update charity
       var loggedInUser = Meteor.user();
       if (!loggedInUser ||
-          !Roles.userIsInRole(loggedInUser, ['manage-users','admin']) || 
-          !charityObject.owner || charityObject.owner != loggedInUser._id) {
+          (!Roles.userIsInRole(loggedInUser, ['manage-users','admin']) && 
+          (!charityObject.owner || charityObject.owner != loggedInUser._id))) {
         throw new Meteor.Error(403, "Access denied");
       }
 

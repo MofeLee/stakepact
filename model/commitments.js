@@ -140,7 +140,8 @@ Schema.Commitment = new SimpleSchema({
     optional: true
   },
   notifications: {
-    type: Schema.Notifications
+    type: Schema.Notifications,
+    optional: true
   }
 });
 
