@@ -45,12 +45,22 @@ body {
   border-color: white;
 }
 
-.primary-button:hover, .primary-button:hover:focus {
+.secondary-button {
+  font-size: 2vw;
+  font-weight: 800;
+  letter-spacing: .04em;
+  background-color: black;
+  border-color: white;
+}
+
+.primary-button:hover, .primary-button:hover:focus,
+.secondary-button:hover, .secondary-button:hover:focus  {
   background: white !important;
   color: black;
 }
 
-.primary-button:focus {
+.primary-button:focus 
+.secondary-button:focus {
   background: black;
   color: white;
 }

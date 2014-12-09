@@ -54,7 +54,7 @@
               $state.go('create.signup', {create_commitment: true});
             }
           }, function(error){
-            conosle.log(error);
+            console.log(error);
           }
         );
 

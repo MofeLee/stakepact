@@ -3,13 +3,13 @@
 
   angular.module('app').controller('StakesCtrl', StakesCtrl);
 
-  StakesCtrl.$inject = ['$subscribe','$scope', '$collection', '$state','$log', 'commitmentString', 'stakesService', 'utilityService', 'stakes'];
+  StakesCtrl.$inject = ['$subscribe','$scope', '$collection', '$state', 'authService', 'commitService', 'stakesService', 'utilityService', 'commitment', 'stakes'];
 
-  function StakesCtrl($subscribe, $scope, $collection, $state, $log, commitmentString, stakesService, utilityService, stakes){
+  function StakesCtrl($subscribe, $scope, $collection, $state, authService, commitService, stakesService, utilityService, commitment, stakes){
     var vm = this;
     vm.activate = activate;
     vm.clearStakes = clearStakes;
-    vm.commitmentString = commitmentString;
+    vm.commitmentString = commitService.getCommitmentString();
     vm.isValidAmmount = isValidAmmount;
     vm.selectCharity = selectCharity;
     vm.setupCheckout = setupCheckout;
@@ -31,6 +31,18 @@
             $collection(Charities).bindOne($scope, 'selectedCharity', vm.stakes.charityId, false, false);
           }
         });
+      });
+
+      $scope.$on('loggedIn', function(loggedIn){
+        authService.getLoginStatus().then(
+          function(user){
+
+          },
+          function(error){
+            commitService.clearCommitment();
+            $state.go('create.signup', {'redirect_uri' : $state.current.url});
+          }
+        );
       });
     }
 
@@ -64,7 +76,7 @@
     }
 
     function setupCheckout(){
-      console.log("https://stage.wepay.com/api/checkout/");
+      Meteor.call("createWePayPreapproval", stakesService.getStakes(), commitment._id);
       //WePay.iframe_checkout("wepay_checkout", "https://stage.wepay.com/api/checkout/");
     }
 

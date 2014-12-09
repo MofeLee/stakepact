@@ -14,7 +14,7 @@
     /////////////////////
 
     function activate(){
-      $scope.$on('currentUser', function(currentUser){
+      $scope.$on('loggedIn', function(loggedIn){
         authService.getLoginStatus().then(
           function(user){
             // confirm user can still view charity -- should never reach here, but just in case

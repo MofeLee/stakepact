@@ -95,11 +95,22 @@ Meteor.users.attachSchema(Schema.User);
 
 Meteor.users.deny({
   update: function (userId, user, fields, modifier) {
-    if (userId !== user._id)
+    if (userId !== user._id){
+      console.log("whoopsie");
       return true;
+    }
 
     // logic for limiting profile editing
-
     return false;
+  }
+});
+
+Meteor.users.allow({
+  update: function(userId, user, fields, modifier) {
+    if(userId === user._id || Roles.userIsInRole(userId, ['manage-users','admin'])){
+      return true;
+    }else{
+      return false;
+    }
   }
 });

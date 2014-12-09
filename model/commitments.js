@@ -149,15 +149,15 @@ Commitments = new Mongo.Collection("commitments");
 
 Commitments.allow({
   insert: function (userId, commitment) {
-    console.log('inserting' + commitment.name);
+    console.log('inserting ' + commitment.activity);
     return userId && (commitment.owner === userId || Roles.userIsInRole(userId, ['manage-users','admin']));
   },
   update: function (userId, commitment, fields, modifier) {
-    console.log('updating ' + commitment.name);
+    console.log('updating ' + commitment.activity);
     return userId && (commitment.owner === userId || Roles.userIsInRole(userId, ['manage-users','admin']));
   },
   remove: function (userId, commitment) {
-    console.log('removing ' + commitment.name);
+    console.log('removing ' + commitment.activity);
     return userId && (commitment.owner === userId || Roles.userIsInRole(userId, ['manage-users','admin']));
   }
 });

@@ -100,23 +100,28 @@ Meteor.methods({
     return fut.wait();
   },
 
-  createWePayPreapproval: function(stakes, commitment, charity) {
-    if (!charity || !commitment || !commitment.commitmentString || !stakes || !stakes.ammount) {
+  createWePayPreapproval: function(stakes, commitment) {
+    if (!stakes || !stakes.charityId || !stakes.charityType || !stakes.ammount || !commitment) {
       // throw new Meteor.Error("bad-request", "data argument isn't properly configured");
       throw Meteor.error("bad-request", "arguments not properly configured");
     } else {
+
+      var commitmentObject = Commitments.findOne({_id: commitment});
+      if(!commitmentObject){
+        throw Meteor.error("bad request", "commitment not found");
+      }
 
       // check for authorization to create stakes and update commitment
       var loggedInUser = Meteor.user();
       if (!loggedInUser ||
           (!Roles.userIsInRole(loggedInUser, ['manage-users','admin']) && 
-          (!commitment.owner || commitment.owner != loggedInUser._id))) {
+          (!commitmentObject.owner || commitmentObject.owner != loggedInUser._id))) {
         throw new Meteor.Error(403, "Access denied");
       }
 
       var fut = new Future();
 
-      charityObject = Charities.findOne({_id: charity});
+      charityObject = Charities.findOne({_id: stakes.charityId});
       if(!charityObject){
         throw Meteor.error("bad-request", "charity not found");
       }
@@ -132,8 +137,8 @@ Meteor.methods({
       wp.call('/preapproval/create', {
         account_id: charityObject.wepay.account_id,
         period: "weekly",
-        short_description: commitment.commitmentString + "Stakes for your commitment: " + commitment.commitmentString,
-        amount: stakes.ammount,
+        short_description: commitment.commitmentString + "Stakes for your commitment: " + commitment.activity + " " + commitment.frequency + " for the next " + commitment.duration + " weeks",
+        amount: stakes.ammount*commitment.duration, // max charge is ammount per week * duration of commitment in weeks
         fee_payer: "payee",
         mode: "iframe"
       }, Meteor.bindEnvironment(

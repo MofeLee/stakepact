@@ -22,7 +22,7 @@
       console.log(Charities);
 
       // reroute user to signup if logout mid session
-      $scope.$on('currentUser', function(currentUser){
+      $scope.$on('loggedIn', function(loggedIn){
         authService.getLoginStatus().then(
           function(user){
             $subscribe.subscribe("my_charities").then(function(){

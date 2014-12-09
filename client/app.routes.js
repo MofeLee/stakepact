@@ -1,4 +1,7 @@
-angular.module("app").run(function($rootScope, $state) {
+angular.module("app").run(function($rootScope, $state, $subscribe) {
+  // subscribe to user data
+  $subscribe.subscribe('userData');
+
   // avoid using stateChangeStart because you want to resolve things instead of using rules
   // resolving is better for promises
   // in this specific case, you want to wait for logging in to complete before checking for authorization
@@ -6,9 +9,9 @@ angular.module("app").run(function($rootScope, $state) {
     if (!to.data || !angular.isFunction(to.data.rule)) return;
   });
 
-  // let the world know every time currentUser changes
-  $rootScope.$watch('currentUser', function(currentUser){
-    $rootScope.$broadcast('currentUser');
+  // let the world know every time loggedIn changes
+  $rootScope.$watch('loggedIn', function(loggedIn){
+    $rootScope.$broadcast('loggedIn');
   });
 
   $rootScope.$on('$stateChangeError', function(event, toState, toParams, fromState, fromParams, error){ 
@@ -52,7 +55,7 @@ angular.module("app").run(function($rootScope, $state) {
 
   // hacky -- we need to wait for rootScope.currentUser to resolve before we deal with states
   // right now --> if you login on home page, redirect to dashboard
-  var userRequiredStates = ['create.stakes', 'create.notifications', 'dashboard'];
+  var userRequiredStates = ['create.notifications', 'dashboard'];
   $rootScope.$watch('currentUser', function(currentUser){
     if(currentUser) {
 
@@ -145,7 +148,7 @@ angular.module("app").config(['$urlRouterProvider', '$stateProvider', '$location
         template: '<ui-view/>'
       })
       .state('create.commit', {
-        url: '/commit',
+        url: '/commit?modify',
         template: UiRouter.template('commit.html'),
         controller: 'CommitCtrl',
         controllerAs: 'commitctrl'
@@ -177,15 +180,17 @@ angular.module("app").config(['$urlRouterProvider', '$stateProvider', '$location
           isAuthorized: function(authService){
             return authService.getLoginStatus();
           },
-          commitmentString: function($q, commitService) {
+          commitment: function($q, commitService) {
             var defer = $q.defer();
 
-            var commitmentString = commitService.getCommitmentString();
-            if(commitmentString) {
-              defer.resolve(commitmentString);
+            var commitment = commitService.getCommitment();
+            console.log(commitment);
+            
+            if(commitment && commitment._id) {
+              defer.resolve(commitment);
             }
             else {
-              defer.reject({status: 400, description: "missing commitmentString"});
+              defer.reject({status: 400, description: "commitment not properly configured"});
             }
 
             return defer.promise;
