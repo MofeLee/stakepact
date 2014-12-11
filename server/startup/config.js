@@ -1,3 +1,6 @@
+// configure oauthSecretKey
+OAuthEncryption.loadKey(Meteor.settings.oauthSecretKey);
+
 // first, remove configuration entry in case service is already configured
 ServiceConfiguration.configurations.remove({
   service: "facebook"

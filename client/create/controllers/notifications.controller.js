@@ -60,6 +60,9 @@
       }
 
       notificationsService.setNotificationSettings(notificationSettings);
+      if(commitment && stakes && notificationSettings){
+        
+      }
       $state.go('dashboard');
     }
   }

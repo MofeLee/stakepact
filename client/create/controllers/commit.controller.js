@@ -10,7 +10,7 @@
     vm.activate = activate;
     vm.activity = null;
     vm.duration = null;
-    vm.frequencies = ['1x weekly', '2x weekly', '3x weekly', '4x weekly', '5x weekly', '6x weekly', 'daily'];
+    vm.frequencies = commitService.frequencies;
     vm.frequency = null;
     vm.isValidDuration = isValidDuration;
     vm.loadCommitment = loadCommitment;
@@ -46,12 +46,18 @@
     function submit() {
       if($scope.commitForm.$valid && vm.frequency) {
         // save the data to the collection with an anonymous user status ~> convert to real user and tag on data
-        commitService.setCommitment(vm.activity, vm.frequency, vm.duration);
-        if(Meteor.user()){
-          $state.go('create.stakes');
-        } else {
-          $state.go('create.signup');
-        }
+        commitService.setCommitment(vm.activity, vm.frequency, vm.duration).then(
+          function(response){
+            if(Meteor.user()){
+              $state.go('create.stakes');
+            } else {
+              $state.go('create.signup', {create_commitment: true});
+            }
+          }, function(error){
+            console.log(error);
+          }
+        );
+
       }
     }
 
