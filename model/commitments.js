@@ -57,7 +57,7 @@ Schema.Stakes = new SimpleSchema({
     type: String,
     label: "charity_id"
   }, 
-  charity_type: {
+  charityType: {
     type: String,
     label: "charity type",
     allowedValues: ['charity', 'anti-charity']

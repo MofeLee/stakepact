@@ -100,67 +100,6 @@ Meteor.methods({
     return fut.wait();
   },
 
-  createWePayPreapproval: function(stakes, commitment) {
-    if (!stakes || !stakes.charityId || !stakes.charityType || !stakes.ammount || !commitment) {
-      // throw new Meteor.Error("bad-request", "data argument isn't properly configured");
-      throw Meteor.error("bad-request", "arguments not properly configured");
-    } else {
-
-      var commitmentObject = Commitments.findOne({_id: commitment});
-      if(!commitmentObject){
-        throw Meteor.error("bad request", "commitment not found");
-      }
-
-      // check for authorization to create stakes and update commitment
-      var loggedInUser = Meteor.user();
-      if (!loggedInUser ||
-          (!Roles.userIsInRole(loggedInUser, ['manage-users','admin']) && 
-          (!commitmentObject.owner || commitmentObject.owner != loggedInUser._id))) {
-        throw new Meteor.Error(403, "Access denied");
-      }
-
-      var fut = new Future();
-
-      charityObject = Charities.findOne({_id: stakes.charityId});
-      if(!charityObject){
-        throw Meteor.error("bad-request", "charity not found");
-      }
-
-      if(!charityObject.verified || !charityObject.wepay || !charityObject.wepay.account_id) {
-        throw Meteor.error("bad-request", "charity not configured to accept donations");
-      }
-
-      console.log(charityObject);
-
-      // call preapproval/create and return the validated iframe url
-      wp.set_access_token(wepay_settings.access_token);
-      wp.call('/preapproval/create', {
-        account_id: charityObject.wepay.account_id,
-        period: "weekly",
-        short_description: commitment.commitmentString + "Stakes for your commitment: " + commitment.activity + " " + commitment.frequency + " for the next " + commitment.duration + " weeks",
-        amount: stakes.ammount*commitment.duration, // max charge is ammount per week * duration of commitment in weeks
-        fee_payer: "payee",
-        mode: "iframe"
-      }, Meteor.bindEnvironment(
-        function(res, err){
-          if(err){
-            fut.throw(new Meteor.Error("preapproval-failed", err));
-          }else{
-            try{
-              response = JSON.parse(String(res));
-              console.log(response);
-              fut.return(response);
-            } catch(e) {
-              console.log(e);
-              fut.throw(new Meteor.Error('parse-failed'));
-            }
-          }
-        }));
-
-      return fut.wait();
-    }
-  },
-
   deleteWePayAccount: function(charity){
     if (!charity ) {
       // throw new Meteor.Error("bad-request", "data argument isn't properly configured");
@@ -291,6 +230,27 @@ Meteor.methods({
 
       return fut.wait();
     }
+  },
+  storeWepayCreditCardId: function(credit_card_id){
+    // check for authorization to update user
+    var loggedInUser = Meteor.user();
+    if (!loggedInUser){
+      throw new Meteor.Error(403, "Access denied");
+    }
+
+    var fut = new Future();
+
+    var encryptedCreditCardId = OAuthEncryption.seal(credit_card_id);
+    Meteor.users.update({_id: loggedInUser._id}, {$set: {credit_card_id: encryptedCreditCardId}}, 
+      function(error, docs){
+        if(error){
+          fut.throw(new Meteor.Error("internal-error", "unable to store encrypted credit_card_id"));
+        }else{
+          fut.return(docs);
+        }
+    });
+
+    return fut.wait();
   }
 });
 
@@ -315,3 +275,131 @@ function updateCharityWithWepayAccount(charity, oauthResponse, createResponse, c
     }
   }, callback);
 }
+
+// pay a charity for a failed commitment -- server side only
+function createWePayCheckout(commitmentId, reportingPeriod) {
+  if(!reportingPeriod && !commitmentId){
+    throw new Meteor.Error('bad-request', 'must include commitmentId and reportingPeriod arguments');
+  }
+
+  var commitment = Commitments.findOne({_id: commitmentId});
+  if(!commitment){
+    throw new Meteor.Error('bad-request', 'commitment not found');
+  }
+
+  if(!commitment.activity || !commitment.stakes || !commitment.stakes.ammount || !commitment.owner || !commitment.stakes.charityId){
+    throw new Meteor.Error('bad-request', 'commitment not properly configured to create checkout');
+  }
+    
+  var charity = Charities.findOne({_id: commitment.stakes.charity});
+  if(!charity){
+    throw new Meteor.Error('bad-request', 'charity not found');
+  }
+
+  if(!charity.wepay || !charity.wepay.access_token || !charity.wepay.account_id || !charity.verified){
+    throw new Meteor.Error('bad-request', 'charity not properly configured to receive payments');
+  }
+
+
+  var user = Meteor.users.findOne({_id: commitment.owner});
+  if(!user && user.credit_card_id){
+    throw new Meteor.Error('bad-request', 'commitment owner not found in users');
+  }
+    
+  // decrypt the owner's credit_card_id
+  var decryptedCreditCardId = OAuthEncryption.isSealed(user.credit_card_id) ? OAuthEncryption.open(user.credit_card_id) : user.credit_card_id;
+
+  // create a short description of the payment
+  var short_description = 'stakepact donation for failing to ' + commitment.activity + ' ' + commitment.duration + ' times between ' + reportingPeriod.startDay + ' and ' + reportingPeriod.endDay;
+  
+  var params = {
+    'account_id': charity.account_id,
+    'short_description': short_description,
+    'type': 'DONATION',
+    'payment_method_type': credit_card,
+    'payment_method_id': decryptedCreditCardId,
+    'fee_payer': 'payee',
+    'amount': commitment.stakes.ammount,
+  };
+
+  var encryptedAccessToken = charity.wepay.access_token;
+  var decryptedAccessToken = OAuthEncryption.isSealed(encryptedAccessToken) ? OAuthEncryption.open(encryptedAccessToken) : encryptedAccessToken;
+  wp.set_access_token(decryptedAccessToken);
+  wp.call('/checkout/create', params,
+    function(response) {
+      if(err){
+        console.log(err);
+        throw new Meteor.Error("wepay-checkout", err);
+      }
+      try{
+        response = JSON.parse(String(res));
+        console.log(response);
+        
+        // everything worked -- checkout successful. give yourself a high-five!
+        return(response);
+
+      } catch(e) {
+        console.log(e);
+        throw new Meteor.Error('parse-failed');
+      }
+    }
+  );
+}
+
+// // creates embedded preapproval -- replaced with credit card tokenizing
+// createWePayPreapproval: function(stakes, commitment) {
+//   if (!stakes || !stakes.charityId || !stakes.charityType || !stakes.ammount || !commitment) {
+//     // throw new Meteor.Error("bad-request", "data argument isn't properly configured");
+//     throw Meteor.error("bad-request", "arguments not properly configured");
+//   } else {
+
+//     var commitmentObject = Commitments.findOne({_id: commitment});
+//     if(!commitmentObject){
+//       throw Meteor.error("bad request", "commitment not found");
+//     }
+
+//     // check for authorization to create stakes and update commitment
+//     var loggedInUser = Meteor.user();
+//     if (!loggedInUser ||
+//         (!Roles.userIsInRole(loggedInUser, ['manage-users','admin']) && 
+//         (!commitmentObject.owner || commitmentObject.owner != loggedInUser._id))) {
+//       throw new Meteor.Error(403, "Access denied");
+//     }
+
+//     var fut = new Future();
+
+//     charityObject = Charities.findOne({_id: stakes.charityId});
+//     if(!charityObject){
+//       throw Meteor.error("bad-request", "charity not found");
+//     }
+
+//     if(!charityObject.verified || !charityObject.wepay || !charityObject.wepay.account_id) {
+//       throw Meteor.error("bad-request", "charity not configured to accept donations");
+//     }
+
+//     // call preapproval/create and return the validated iframe url
+//     wp.set_access_token(wepay_settings.access_token);
+//     wp.call('/preapproval/create', {
+//       account_id: charityObject.wepay.account_id,
+//       period: "weekly",
+//       short_description: commitment.commitmentString + "Stakes for your commitment: " + commitment.activity + " " + commitment.frequency + " for the next " + commitment.duration + " weeks",
+//       amount: stakes.ammount*commitmentObject.duration, // max charge is ammount per week * duration of commitment in weeks
+//       fee_payer: "payee",
+//       mode: "iframe"
+//     }, Meteor.bindEnvironment(
+//       function(res, err){
+//         if(err){
+//           fut.throw(new Meteor.Error("preapproval-failed", err));
+//         }else{
+//           try{
+//             response = JSON.parse(String(res));
+//             fut.return(response);
+//           } catch(e) {
+//             fut.throw(new Meteor.Error('parse-failed'));
+//           }
+//         }
+//       }));
+
+//     return fut.wait();
+//   }
+// }

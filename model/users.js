@@ -88,6 +88,12 @@ Schema.User = new SimpleSchema({
   commitments: {
     type: [String],
     optional: true
+  },
+
+  credit_card_id: {
+    type: Object,
+    optional: true,
+    blackbox: true
   }
 });
 
@@ -96,7 +102,6 @@ Meteor.users.attachSchema(Schema.User);
 Meteor.users.deny({
   update: function (userId, user, fields, modifier) {
     if (userId !== user._id){
-      console.log("whoopsie");
       return true;
     }
 

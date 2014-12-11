@@ -13,13 +13,12 @@
     vm.submitted = false;
     vm.success = false;
 
-    vm.activate();
+    vm.activate();  // activate the controller
 
     //////////////////
-    utilityService.convertToEIN('000000000');
 
+    // activate the controller
     function activate() {
-      console.log(Charities);
 
       // reroute user to signup if logout mid session
       $scope.$on('loggedIn', function(loggedIn){
@@ -34,6 +33,18 @@
           }
         );
       });
+    }
+
+    function isValidEIN(val){
+      return utilityService.isValidEIN(val);
+    }
+
+    function isValidPhoneNumber(val){
+      return utilityService.isValidPhoneNumber(val);
+    }
+
+    function isValidState(val){
+      return val && utilityService.isValidState(val.toUpperCase());
     }
 
     // submit form to create charity to be reviewed by moderator for verification
@@ -64,18 +75,6 @@
         });
         console.log($scope.charities);
       }
-    }
-
-    function isValidPhoneNumber(val){
-      return utilityService.isValidPhoneNumber(val);
-    }
-
-    function isValidEIN(val){
-      return utilityService.isValidEIN(val);
-    }
-
-    function isValidState(val){
-      return val && utilityService.isValidState(val.toUpperCase());
     }
   }
 })();

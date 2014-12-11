@@ -26,7 +26,7 @@ Meteor.publish("charities", function(channel_name) {
     // non-admin users can't see unverified charities that don't have wepay accounts
     channel.verified = true;
     channel.wepay = {$exists: true};
-    console.log(channel);
+
     return Charities.find(channel, {fields: {name: 1, city: 1, state: 1, ein: 1, website: 1}});
   }
 });

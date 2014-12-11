@@ -55,17 +55,17 @@ angular.module("app").run(function($rootScope, $state, $subscribe) {
 
   // hacky -- we need to wait for rootScope.currentUser to resolve before we deal with states
   // right now --> if you login on home page, redirect to dashboard
-  var userRequiredStates = ['create.notifications', 'dashboard'];
-  $rootScope.$watch('currentUser', function(currentUser){
-    if(currentUser) {
+  // var userRequiredStates = ['create.notifications', 'dashboard'];
+  // $rootScope.$watch('currentUser', function(currentUser){
+  //   if(currentUser) {
 
-      if($state.current.name === 'create.commit'){
-        $state.go('dashboard');
-      }
-    } else if(userRequiredStates.indexOf($state.current.name) !== -1) {
-      $state.go('create.commit');
-    }
-  });
+  //     if($state.current.name === 'create.commit'){
+  //       $state.go('dashboard');
+  //     }
+  //   } else if(userRequiredStates.indexOf($state.current.name) !== -1) {
+  //     $state.go('create.commit');
+  //   }
+  // });
 });
 
 angular.module("app").config(['$urlRouterProvider', '$stateProvider', '$locationProvider',
@@ -184,7 +184,6 @@ angular.module("app").config(['$urlRouterProvider', '$stateProvider', '$location
             var defer = $q.defer();
 
             var commitment = commitService.getCommitment();
-            console.log(commitment);
             
             if(commitment && commitment._id) {
               defer.resolve(commitment);
@@ -195,8 +194,8 @@ angular.module("app").config(['$urlRouterProvider', '$stateProvider', '$location
 
             return defer.promise;
           },
-          stakes: function(stakesService) {
-            return stakesService.getStakes();
+          stakes: function($q, commitService) {
+            return commitService.getStakes();
           }
         }
       })
@@ -219,9 +218,9 @@ angular.module("app").config(['$urlRouterProvider', '$stateProvider', '$location
             }
             return defer.promise;
           },
-          stakes: function($q, stakesService){
+          stakes: function($q, commitService){
             var defer = $q.defer;
-            var stakes = stakesService.getStakes();
+            var stakes = commitService.getStakes();
             if(stakes) {
               defer.resolve(stakes);
             } else {

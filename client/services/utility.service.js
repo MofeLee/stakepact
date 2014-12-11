@@ -17,7 +17,6 @@
 
     function convertToEIN(n){
       var stripped = n.replace(/\D/g,'');
-      console.log(stripped);
       return stripped.slice(0,2) + '-' + stripped.slice(2);
     }
 
