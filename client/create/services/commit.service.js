@@ -157,12 +157,46 @@
       return defer.promise;
     }
 
+    // set notifications for the commitment
+    function setNotifications(options){
+      var defer = $q.defer();
+      if(options && !(options.alerts && options.alerts.enabled && !commitment.stakes)){
+        if(commitment._id){
+          subscribeToCommitments('my_commitments').then(function(){
+            Commitments.update({_id: commitment._id}, {$set: {
+              notifications: options
+            }}, function(err, docs){
+              if(err){
+                defer.reject(err);
+              } else {
+                commitment.notifications = options;
+                defer.resolve(docs);
+              }
+            });
+          }, function(error){
+            defer.reject(error);
+          });
+        } else {
+          defer.reject("notifications cannot be stored until commitment is in database");
+        }
+      } else {
+        defer.reject("notification options not properly configured");
+      }
+
+      return defer.promise;
+    }
+
+    // set stakes for the commitment
     function setStakes(stakes){
       var defer = $q.defer();
 
       if(stakes && stakes.charity && stakes.charityType && stakes.ammount){
         if(commitment._id){
           subscribeToCommitments('my_commitments').then(function(){
+            
+            if(!commitment.stakes)  // if the stakes are new (or reset), create a startDate for enforcement
+              stakes.startDate = new Date();
+            
             Commitments.update({_id: commitment._id}, {$set: {
               stakes: stakes
             }}, function(err, docs){
@@ -176,6 +210,8 @@
           }, function(error){
             defer.reject(error);
           });
+        } else {
+          defer.reject("stakes cannot be stored until commitment is in database");
         }
       }else{
         defer.reject("stakes not properly configured");

@@ -1,8 +1,8 @@
 angular.module('app').factory('scriptLoaderService', scriptLoaderService);
 
-scriptLoaderService.$inject = ['$q'];
+scriptLoaderService.$inject = ['$q', 'angularLoad'];
 
-function scriptLoaderService($q){
+function scriptLoaderService($q, angularLoad){
   var urls = [];
   var service = {
     loadScript: loadScript
@@ -13,20 +13,20 @@ function scriptLoaderService($q){
   ////////////////
 
   function loadScript(url){
-    // var defer = $q.defer();
+    var defer = $q.defer();
 
-    // if(_.contains(urls, url)){  // if the service is already loaded, don't reload
-    //   defer.resolve();
-    // }else{
-    //   angularLoad.loadScript(url).then(function() {
-    //     urls.push(url);
-    //     defer.resolve();
-    //   }.catch(function(error) {
-    //     // There was some error loading the script. Meh
-    //     defer.reject({status: "script-load-error" , description: "there was an error loading the script", details: error});
-    //   }));
-    // }
+    if(_.contains(urls, url)){  // if the service is already loaded, don't reload
+      defer.resolve();
+    }else{
+      angularLoad.loadScript(url).then(function() {
+        urls.push(url);
+        defer.resolve();
+      }).catch(function(error) {
+        // There was some error loading the script. Meh
+        defer.reject({status: "script-load-error" , description: "there was an error loading the script", details: error});
+      });
+    }
 
-    // return defer.promise;
+    return defer.promise;
   }
 }
