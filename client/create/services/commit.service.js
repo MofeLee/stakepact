@@ -5,9 +5,9 @@
 
   angular.module('app').factory('commitService', commitService);
 
-  commitService.$inject = ['$q', '$subscribe'];
+  commitService.$inject = ['$q', 'utilityService'];
 
-  function commitService($q, $subscribe) {
+  function commitService($q, utilityService) {
     var commitment = null;
     var subscriptions = {};
     var frequencies = ["1x weekly", "2x weekly", "3x weekly", "4x weekly", "5x weekly", "6x weekly", "daily"];

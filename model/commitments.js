@@ -16,28 +16,6 @@ Schema.NotificationDetails = new SimpleSchema({
   enabled: {
     type: Boolean,
     label: 'enabled'
-  },
-  createdAt: {
-    type: Date,
-      autoValue: function() {
-        if (this.isInsert) {
-          return new Date();
-        } else if (this.isUpsert) {
-          return {$setOnInsert: new Date()};
-        } else {
-          this.unset();
-        }
-      }
-  },
-  updatedAt: {
-    type: Date,
-    autoValue: function() {
-      if (this.isUpdate) {
-        return new Date();
-      }
-    },
-    denyInsert: true,
-    optional: true
   }
 });
 
@@ -67,27 +45,9 @@ Schema.Stakes = new SimpleSchema({
     label: "ammount",
     decimal: true
   },
-  createdAt: {
+  startDate: {
     type: Date,
-      autoValue: function() {
-        if (this.isInsert) {
-          return new Date();
-        } else if (this.isUpsert) {
-          return {$setOnInsert: new Date()};
-        } else {
-          this.unset();
-        }
-      }
-  },
-  updatedAt: {
-    type: Date,
-    autoValue: function() {
-      if (this.isUpdate) {
-        return new Date();
-      }
-    },
-    denyInsert: true,
-    optional: true
+    label: "start date"
   }
 });
 
@@ -95,6 +55,42 @@ Schema.Commitment = new SimpleSchema({
   owner : {
     type: String,
     label: "owner",
+  },
+  checkins : {  // stores a Date object representing the day and a boolean for whether or not the user has checked in
+    type: [Object],
+     autoValue: function() {
+      if (this.isInsert) {
+        var startDate = new Date(); // get the current time
+        var copiedDate = new Date(startDate.getTime()); // copy the current time object
+        var duration = this.field("duration").value;  // determine the duration of the commitment
+        var checkins = [{date: copiedDate, checkedIn: false}];  // create the first element in the array with the copied object
+        for(var i = 1; i < duration*7; i++){  // increment the date and add each day to array for 7 days * duration in weeks
+          checkins[i] = {date: new Date(startDate.setDate(startDate.getDate()+1)), checkedIn: false};
+        }
+        return checkins;
+      } else {  // if updating, if the duration increases, add more unchecked elements to the array
+        if(this.field("duration").operator==="$set"){
+          var thisCommitment = Commitments.findOne({_id: this.docId});  // right now, the best way i can see to access this field is by searching mongo
+          if(thisCommitment.checkins){
+            var diff = this.field("duration").value*7 - thisCommitment.checkins.length; // find the difference between duration in weeks * 7 and current array length
+            if(diff>0){
+              var lastDate = _.last(thisCommitment.checkins).date;
+              newCheckins = [];
+              for(var j = 0; j < diff; j++){
+                newCheckins[j] = {date: new Date(lastDate.setDate(lastDate.getDate()+1)), checkedIn: false};  // create new elements for each new day 
+              }
+              return {$push: {$each: newCheckins}}; // push new elements onto checkins
+            }
+          }
+        }
+      }
+    }
+  },
+  "checkins.$.date": {
+    type: Date
+  },
+  "checkins.$.checkedIn": {
+    type: Boolean
   },
   activity: {
     type: String,
@@ -146,6 +142,7 @@ Schema.Commitment = new SimpleSchema({
 });
 
 Commitments = new Mongo.Collection("commitments");
+Commitments.attachSchema(Schema.Commitment);
 
 Commitments.allow({
   insert: function (userId, commitment) {
