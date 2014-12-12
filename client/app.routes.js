@@ -1,6 +1,6 @@
 angular.module("app").run(function($rootScope, $state, $subscribe) {
   // subscribe to user data
-  $subscribe.subscribe('userData');
+  // subscriptionService.subscribe("users", true, "my_data");
 
   // avoid using stateChangeStart because you want to resolve things instead of using rules
   // resolving is better for promises
@@ -113,11 +113,11 @@ angular.module("app").config(['$urlRouterProvider', '$stateProvider', '$location
           isAuthorized: function(authService){
             return authService.getLoginStatus();
           },
-          charity: function(authService, $subscribe, $stateParams, $q) {
+          charity: function(authService, subscriptionService, $stateParams, $q) {
             var defer = $q.defer();
 
             authService.getLoginStatus().then( function(){
-              $subscribe.subscribe("my_charities").then(function(){
+              subscriptionService.subscribe("charities", true, "my_charities").then(function(){
                 var charity = Charities.find($stateParams.charityId).fetch();
                 if(charity && charity.length === 1) {
                   defer.resolve();

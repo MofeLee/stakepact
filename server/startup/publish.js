@@ -1,7 +1,7 @@
 //////////// users
 
 // // server: publish the commitments for this user -- right now i don't see a reason to publish this
-// Meteor.publish("userData", function () {
+// Meteor.publish("my_data", function () {
 //   if (this.userId) {
 //     return Meteor.users.find({_id: this.userId},
 //     {fields: {'commitments': 1}});

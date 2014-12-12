@@ -3,9 +3,9 @@
 
   angular.module('app').controller('CommitCtrl', CommitCtrl);
 
-  CommitCtrl.$inject = ['$log', '$scope', '$timeout', '$state', 'commitService'];
+  CommitCtrl.$inject = ['$log', '$scope', '$timeout', '$state', 'commitService', 'subscriptionService'];
 
-  function CommitCtrl($log, $scope, $timeout, $state, commitService){
+  function CommitCtrl($log, $scope, $timeout, $state, commitService, subscriptionService){
     var vm = this;
     vm.activate = activate;
     vm.activity = null;

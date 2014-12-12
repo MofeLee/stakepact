@@ -1,9 +1,9 @@
 (function() {
   angular.module('app').controller('RegisterCtrl', RegisterCtrl);
 
-  RegisterCtrl.$inject = ['$log', '$state', '$scope', '$subscribe', '$collection', 'utilityService', 'authService'];
+  RegisterCtrl.$inject = ['$log', '$state', '$scope', '$subscribe', '$collection', 'utilityService', 'authService', 'subscriptionService'];
 
-  function RegisterCtrl($log, $state, $scope, $subscribe, $collection, utilityService, authService) {
+  function RegisterCtrl($log, $state, $scope, $subscribe, $collection, utilityService, authService, subscriptionService) {
     var vm = this;
     vm.activate = activate;
     vm.isValidEIN = isValidEIN;
@@ -24,7 +24,7 @@
       $scope.$on('loggedIn', function(loggedIn){
         authService.getLoginStatus().then(
           function(user){
-            $subscribe.subscribe("my_charities").then(function(){
+            subscriptionService.subscribe("charities", true, "my_charities").then(function(){
               $collection(Charities).bind($scope, 'charities', false, true);
             });
           },

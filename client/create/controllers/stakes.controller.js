@@ -20,18 +20,15 @@
     function activate(){
       Session.set("charityChannel", "verified");
 
-      Tracker.autorun(function () {
-        // revise this to better deal with subscriptions
-        $subscribe.subscribe('charities', Session.get("charityChannel")).then(function(){
-          $collection(Charities).bind($scope, 'charities', false, false);
-          console.log($scope.charities);
+      subscriptionService.subscribe("charities", true, "charities", "verified").then(function(){
+        $collection(Charities).bind($scope, 'charities', false, false);
+        console.log($scope.charities);
 
-          // if stakes resolves with a charity, bind $scope.selectedCharity
-          if(vm.stakes && vm.stakes.charity) {
-            vm.showStakes = true;
-            $collection(Charities).bindOne($scope, 'selectedCharity', vm.stakes.charity, false, false);
-          }
-        });
+        // if stakes resolves with a charity, bind $scope.selectedCharity
+        if(vm.stakes && vm.stakes.charity) {
+          vm.showStakes = true;
+          $collection(Charities).bindOne($scope, 'selectedCharity', vm.stakes.charity, false, false);
+        }
       });
 
       $scope.$on('loggedIn', function(loggedIn){
@@ -87,45 +84,49 @@
     function submitCreditCard(){
       var defer = $q.defer();
 
-      scriptLoaderService.loadScript("https://static.wepay.com/min/js/tokenization.v2.js").then(function() {
-        WePay.set_endpoint("stage"); // change to "production" when live
+      if(vm.cardholderName && vm.email && vm.cardNumber1 && vm.cardNumber2 && vm.cardNumber3 && vm.cardNumber4 && vm.cvv && vm.expirationMonth && vm.expirationYear && vm.zip){
+        scriptLoaderService.loadScript("https://static.wepay.com/min/js/tokenization.v2.js").then(function() {
+          WePay.set_endpoint("stage"); // change to "production" when live
 
-        var params = {
-          "client_id":        wepayClientId,
-          "user_name":        vm.cardholderName,
-          "email":            vm.email,
-          "cc_number":        vm.cardNumber1 + vm.cardNumber2 + vm.cardNumber3 + vm.cardNumber4,
-          "cvv":              vm.cvv,
-          "expiration_month": vm.expirationMonth,
-          "expiration_year":  vm.expirationYear,
-          "address": {
-            "zip": vm.zip
-          }
-        };
-
-        WePay.credit_card.create(params, function(data) {
-          if (data.error) {
-            defer.reject(data.error);
-          } else {
-            // call your own app's API to save the token inside the data;
-            // show a success page
-            console.log(data);
-            if(data.credit_card_id){
-              Meteor.call('storeWepayCreditCardId', data.credit_card_id, function(error, result){
-                if(error){
-                  defer.reject(error);
-                }else{
-                  defer.resolve(result);
-                }
-              });
-            }else{
-              defer.reject('no credit card id found');
+          var params = {
+            "client_id":        wepayClientId,
+            "user_name":        vm.cardholderName,
+            "email":            vm.email,
+            "cc_number":        vm.cardNumber1 + vm.cardNumber2 + vm.cardNumber3 + vm.cardNumber4,
+            "cvv":              vm.cvv,
+            "expiration_month": vm.expirationMonth,
+            "expiration_year":  vm.expirationYear,
+            "address": {
+              "zip": vm.zip
             }
-          }
+          };
+
+          WePay.credit_card.create(params, function(data) {
+            if (data.error) {
+              defer.reject(data.error);
+            } else {
+              // call your own app's API to save the token inside the data;
+              // show a success page
+              console.log(data);
+              if(data.credit_card_id){
+                Meteor.call('storeWepayCreditCardId', data.credit_card_id, function(error, result){
+                  if(error){
+                    defer.reject(error);
+                  }else{
+                    defer.resolve(result);
+                  }
+                });
+              }else{
+                defer.reject('no credit card id found');
+              }
+            }
+          });
+        }, function(error){
+          defer.reject(error);
         });
-      }, function(error){
-        defer.reject(error);
-      });
+      }else{
+        defer.reject("credit card information incomplete");
+      }
     
       return defer.promise;
     }

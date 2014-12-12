@@ -1,13 +1,12 @@
 // service for creating, modifying, and uploading a commitment
 // there can only be one active commitment for any given state
 (function() {
-  'use strict';
 
   angular.module('app').factory('commitService', commitService);
 
-  commitService.$inject = ['$q', 'utilityService'];
+  commitService.$inject = ['$q', 'subscriptionService', 'utilityService'];
 
-  function commitService($q, utilityService) {
+  function commitService($q, subscriptionService, utilityService) {
     var commitment = null;
     var subscriptions = {};
     var frequencies = ["1x weekly", "2x weekly", "3x weekly", "4x weekly", "5x weekly", "6x weekly", "daily"];
@@ -222,33 +221,16 @@
 
     // subscribe user to commitments for a given commitmentChannel
     // toggle multi to subscribe to multiple channels or stop all channels and replace with commitmentChannel
-    function subscribeToCommitments(commitmentChannel, multi){
-      var defer = $q.defer();
-
-      if(subscriptions.commitmentChannel){  // if already subscribed, resolve
-        console.log(subscriptions);
-        defer.resolve();
-      }else{
-        // if not multi-subscription, remove all commitment subscriptions
-        if(!multi && !_.isEmpty(subscriptions)){
-          _.each(subscriptions, function(val, key){
-            val.stop();
-          });
-          subscriptions = {};
-        }
-
-        // subscribe
-        subscriptions[commitmentChannel] = Meteor.subscribe(commitmentChannel, {
-          onError: function(error) {
-            defer.reject(error);
-          },
-          onReady: function(subscription) {
-            defer.resolve();
-          }
-        });
+    function subscribeToCommitments(){
+      var args = Array.prototype.slice.call(arguments);
+      
+      if(args.length===1){
+        args.unshift(false);
       }
 
-      return defer.promise;
+      args.unshift('commitments');
+
+      return subscriptionService.subscribe.apply(this, args);
     }
 
     // switch the current commitment object
@@ -288,12 +270,10 @@
               duration: commitment.duration
             }, function(error, response){
               if(error){
-                console.log(error);
                 defer.reject(error);
               }else{
                 Meteor.users.update({_id: Meteor.userId()}, {$push: {commitments: response}}, function(error, docs){
                   if(error){
-                    console.log(error);
                     defer.reject(error);
                   }else{
                     commitment._id = response;  // save the mongo _id of the commitment to the service variable
@@ -304,7 +284,6 @@
             });
           },
           function(error){
-            console.log(error);
             defer.reject(error);
           });
         }else{
