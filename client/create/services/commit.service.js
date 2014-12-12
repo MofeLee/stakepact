@@ -17,9 +17,11 @@
       clearStakes: clearStakes,
       getCommitment: getCommitment,
       getCommitmentString: getCommitmentString,
+      getNotifications: getNotifications,
       getStakes: getStakes,
       getStakesString: getStakesString,
       setCommitment: setCommitment,
+      setNotifications: setNotifications,
       setStakes: setStakes,
       subscribeToCommitments: subscribeToCommitments,
       uploadCommitment: uploadCommitment
@@ -90,6 +92,10 @@
       return commitment? "I vow to " + commitment.activity + " " + frequencies[commitment.frequency-1] + " for the next " + commitment.duration + " weeks": null;
     }
 
+    function getNotificatinos() {
+      return commitment? commitment.notifications : null;
+    }
+
     function getStakes() {
       return commitment? commitment.stakes: null;
     }
@@ -103,11 +109,9 @@
     // will create a new commitment object in mongo if a user is logged in and there is no commitment._id
     // will modify commitment object in mongo if commitment._id exists
     function setCommitment(activity, frequency, duration) {
-      console.log("setting commitment");
       var defer = $q.defer();
 
       if(commitment){   // if commitment exists, modify commitment
-        console.log("commitment exists");
         commitment.activity = activity;
         commitment.frequency = frequency;
         commitment.duration = duration;
@@ -123,7 +127,6 @@
               if(error){
                 defer.reject(docs);
               } else{
-                console.log(docs);
                 defer.resolve(docs);
               }
             });
@@ -135,13 +138,11 @@
           defer.resolve(commitment);
         }
       } else {  // if the commitment doesn't exist, create it
-        console.log("commitment doesn't exist");
         commitment = {
           activity: activity,
           frequency: frequency,
           duration: duration
         };
-        console.log(commitment);
         if(Meteor.userId()){  // if user exists, push new commitment to mongo and add to user commitments
           uploadCommitment().then(function(response){
             defer.resolve(response);
@@ -256,13 +257,11 @@
     // save to user's commitments
     // modify the commitment object to include mongo _id
     function uploadCommitment() {
-      console.log("uploading commitment");
       var defer = $q.defer();
 
       if(Meteor.userId()){
         if(commitment && commitment.activity && commitment.frequency && commitment.duration){
           subscribeToCommitments('my_commitments').then(function(){
-            console.log("inserting commitment");
             Commitments.insert({
               owner: Meteor.userId(),
               activity: commitment.activity,

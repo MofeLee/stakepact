@@ -211,7 +211,7 @@ angular.module("app").config(['$urlRouterProvider', '$stateProvider', '$location
           commitment: function($q, commitService) {
             var defer = $q.defer;
             var commitment = commitService.getCommitment();
-            if(stakes) {
+            if(commitment) {
               defer.resolve(commitment);
             } else {
               defer.reject({status: 400, description: "missing commitment"});
@@ -228,8 +228,8 @@ angular.module("app").config(['$urlRouterProvider', '$stateProvider', '$location
             }
             return defer.promise;
           },
-          notifications: function(notificationsService) {
-            return notificationsService.getNotificationSettings();
+          notifications: function(commitService) {
+            return commitService.getNotifications();
           }
         }
       })

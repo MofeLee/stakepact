@@ -3,9 +3,9 @@
 
   angular.module('app').controller('NotificationsCtrl', NotificationsCtrl);
 
-  NotificationsCtrl.$inject = ['$log', '$scope', '$collection', '$state', 'commitment', 'stakes', 'notifications', 'notificationsService'];
+  NotificationsCtrl.$inject = ['$log', '$scope', '$collection', '$state', 'commitment', 'stakes', 'notifications', 'commitService'];
 
-  function NotificationsCtrl($log, $scope, $state, $collection, commitment, stakes, notifications, notificationsService){
+  function NotificationsCtrl($log, $scope, $state, $collection, commitment, stakes, notifications, commitService){
     var vm = this;
     vm.activate = activate;
     vm.commitment = commitment;
@@ -59,11 +59,11 @@
         notificationSettings.phoneNumber = vm.phoneNumber;
       }
 
-      notificationsService.setNotificationSettings(notificationSettings);
-      if(commitment && stakes && notificationSettings){
-        
-      }
-      $state.go('dashboard');
+      commitService.setNotifications(notificationSettings).then(function(){
+        $state.go('dashboard');
+      }, function(err){
+        console.log(err);
+      });
     }
   }
 
