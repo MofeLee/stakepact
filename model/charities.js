@@ -1,4 +1,5 @@
 var Schema = {};
+var phoneRegex = /^(?:(?:\+?1\s*(?:[.-]\s*)?)?(?:\(\s*([2-9]1[02-9]|[2-9][02-8]1|[2-9][02-8][02-9])\s*\)|([2-9]1[02-9]|[2-9][02-8]1|[2-9][02-8][02-9]))\s*(?:[.-]\s*)?)?([2-9]1[02-9]|[2-9][02-9]1|[2-9][02-9]{2})\s*(?:[.-]\s*)?([0-9]{4})(?:\s*(?:#|x\.?|ext\.?|extension)\s*(\d+))?$/;
 Schema.Contact = new SimpleSchema({
   name: {
     type: String,
@@ -13,7 +14,7 @@ Schema.Contact = new SimpleSchema({
   phone : {
     type: String,
     label: 'phone',
-    regEx: /^(?:(?:\+?1\s*(?:[.-]\s*)?)?(?:\(\s*([2-9]1[02-9]|[2-9][02-8]1|[2-9][02-8][02-9])\s*\)|([2-9]1[02-9]|[2-9][02-8]1|[2-9][02-8][02-9]))\s*(?:[.-]\s*)?)?([2-9]1[02-9]|[2-9][02-9]1|[2-9][02-9]{2})\s*(?:[.-]\s*)?([0-9]{4})(?:\s*(?:#|x\.?|ext\.?|extension)\s*(\d+))?$/
+    regEx: phoneRegex
   },
   createdAt: {
     type: Date,
@@ -89,7 +90,7 @@ Schema.Charity = new SimpleSchema({
   website: {
     type: String,
     label: 'website',
-    regEx: SimpleSchema.RegEx.Url,
+    regEx: SimpleSchema.RegEx.WeakDomain,
     optional: true
   },
   description: {

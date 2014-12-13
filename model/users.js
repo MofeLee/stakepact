@@ -54,6 +54,11 @@ Schema.User = new SimpleSchema({
     // but if you use only accounts-password, then it can be required
     optional: true
   },
+  phone: {
+    type: String,
+    label: "phone number",
+    regEx: phoneRegex
+  },
   "emails.$.address": {
     type: String,
     regEx: SimpleSchema.RegEx.Email

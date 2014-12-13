@@ -92,7 +92,7 @@
       return commitment? "I vow to " + commitment.activity + " " + frequencies[commitment.frequency-1] + " for the next " + commitment.duration + " weeks": null;
     }
 
-    function getNotificatinos() {
+    function getNotifications() {
       return commitment? commitment.notifications : null;
     }
 

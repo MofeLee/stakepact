@@ -7,33 +7,33 @@ Schema.NotificationDetails = new SimpleSchema({
     allowedValues: ['text', 'email'],
     optional: true
   },
-  frequency: {
-    type: String,
-    label: 'frequency',
-    allowedValues: ['daily', 'weekly'],
-    optional: true
-  },
-  //  //  when you wanna make serious notifications!
-  // times: {
-  //   type: [Object],
-  //   label: 'times',
+  // frequency: {
+  //   type: String,
+  //   label: 'frequency',
+  //   allowedValues: ['daily', 'weekly'],
   //   optional: true
   // },
-  // 'times.$.minute': {
-  //   type: Number,
-  //   min: 0,
-  //   max: 59
-  // },
-  // 'times.$.hour': {
-  //   type: Number,
-  //   min: 0,
-  //   max: 23
-  // },
-  // 'times.$.day': {
-  //   type: Number,
-  //   min: 0,
-  //   max: 6
-  // },
+  //  when you wanna make serious notifications!
+  times: {
+    type: [Object],
+    label: 'times',
+    optional: true
+  },
+  'times.$.minute': {
+    type: Number,
+    min: 0,
+    max: 59
+  },
+  'times.$.hour': {
+    type: Number,
+    min: 0,
+    max: 23
+  },
+  'times.$.day': {
+    type: Number,
+    min: 0,
+    max: 6
+  },
   enabled: {
     type: Boolean,
     label: 'enabled'
