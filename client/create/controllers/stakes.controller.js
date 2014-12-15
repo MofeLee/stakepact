@@ -3,9 +3,9 @@
 
   angular.module('app').controller('StakesCtrl', StakesCtrl);
 
-  StakesCtrl.$inject = ['$q', '$subscribe','$scope', '$collection', '$state', 'authService', 'commitService', 'scriptLoaderService', 'utilityService', 'commitment', 'stakes', 'wepayClientId'];
+  StakesCtrl.$inject = ['$q','$scope', '$collection', '$state', 'authService', 'commitService', 'scriptLoaderService', 'subscriptionService', 'utilityService', 'commitment', 'stakes', 'wepayClientId'];
 
-  function StakesCtrl($q, $subscribe, $scope, $collection, $state, authService, commitService, scriptLoaderService, utilityService, commitment, stakes, wepayClientId){
+  function StakesCtrl($q, $scope, $collection, $state, authService, commitService, scriptLoaderService, subscriptionService, utilityService, commitment, stakes, wepayClientId){
     var vm = this;
     vm.activate = activate;
     vm.clearStakes = clearStakes;
@@ -22,8 +22,7 @@
 
       subscriptionService.subscribe("charities", true, "charities", "verified").then(function(){
         $collection(Charities).bind($scope, 'charities', false, false);
-        console.log($scope.charities);
-
+        
         // if stakes resolves with a charity, bind $scope.selectedCharity
         if(vm.stakes && vm.stakes.charity) {
           vm.showStakes = true;

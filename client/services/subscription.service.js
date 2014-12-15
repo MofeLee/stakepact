@@ -22,14 +22,11 @@ function subscriptionService($q){
   // subscribeToChannel(collection, multi, [arg1, arg2, ...])
   function subscribe(){
     var defer = $q.defer();
-    console.log(arguments);
     var args = Array.prototype.slice.call(arguments);
-    console.log(args);
     if(args.length > 2){
       var collection = args[0];
       var multi = args[1];
       var subscribeArgs = _.rest(args, 2);
-      console.log(subscribeArgs);
 
       // callbacks supplied as last argument
       subscribeArgs.push({
@@ -49,7 +46,6 @@ function subscriptionService($q){
         _.each(subscriptions[collection], function(val, key){
           val.stop();
         });
-        console.log("here");
         subscriptions[collection] = {};
       }else{
         if(subscriptions[collection][args[2]]){
@@ -57,7 +53,6 @@ function subscriptionService($q){
         }
       }
 
-      console.log(subscribeArgs);
       subscriptions[collection][args[2]] = Meteor.subscribe.apply(this, subscribeArgs);
     }else{
       defer.reject("arguments not properly configured");

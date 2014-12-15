@@ -172,7 +172,7 @@ angular.module("app").config(['$urlRouterProvider', '$stateProvider', '$location
         }
       })
       .state('create.stakes', {
-        url: '/stakes?create_commitment',
+        url: '/stakes',
         template: UiRouter.template('stakes.html'),
         controller: 'StakesCtrl',
         controllerAs: 'stakesctrl',
@@ -209,7 +209,7 @@ angular.module("app").config(['$urlRouterProvider', '$stateProvider', '$location
             return authService.getLoginStatus();
           },
           commitment: function($q, commitService) {
-            var defer = $q.defer;
+            var defer = $q.defer();
             var commitment = commitService.getCommitment();
             if(commitment) {
               defer.resolve(commitment);
@@ -218,15 +218,8 @@ angular.module("app").config(['$urlRouterProvider', '$stateProvider', '$location
             }
             return defer.promise;
           },
-          stakes: function($q, commitService){
-            var defer = $q.defer;
-            var stakes = commitService.getStakes();
-            if(stakes) {
-              defer.resolve(stakes);
-            } else {
-              defer.reject({status: 400, description: "missing stakes"});
-            }
-            return defer.promise;
+          stakes: function(commitService){
+            return commitService.getStakes();
           },
           notifications: function(commitService) {
             return commitService.getNotifications();

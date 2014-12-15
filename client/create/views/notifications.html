@@ -18,7 +18,7 @@
           <br>
           <div class="col-xs-offset-2 col-xs-10">
             <p class="tertiary-text">remind me <span ng-class="{'notification-selector-selected': notificationsctrl.reminders.frequency === freq, 'notification-selector': notificationsctrl.reminders.frequency !== freq}" style="padding: 0.5vw;" ng-repeat="freq in notificationsctrl.frequencies" ng-click="notificationsctrl.reminders.frequency = freq"><b>[[freq]]</b></span></p>
-            <div class="row text-center" ng-show="notificationsctrl.reminders.frequency === 'custom'">
+            <div class="row text-center" ng-show="notificationsctrl.reminders.frequency === 'weekly'">
               <div class="col-xs-9">
                 <p class="tertiary-text"><span ng-class="{'notification-selector-selected': notificationsctrl.reminders.times[$index].enabled, 'notification-selector': notificationsctrl.reminders.times[$index].enabled}" style="padding: 5px;" ng-repeat="day in notificationsctrl.days" ng-click="notificationsctrl.toggleRemindersTime($index)"><b>[[day]]</b></span></p>
               </div>
@@ -45,7 +45,7 @@
   <br>
   <br>
 
-  <div class="row text-uppercase text-left">
+  <div class="row text-uppercase text-left" ng-show="notificationsctrl.stakes">
     <h3 class="col-xs-offset-2 text-left primary-text">alerts</h3>
     <div class="row">
       <div class="col-xs-offset-2 col-xs-8 secondary-text">
@@ -63,7 +63,7 @@
           <br>
           <div class="col-xs-offset-2 col-xs-10">
             <p class="tertiary-text">alert me <span ng-class="{'notification-selector-selected': notificationsctrl.alerts.frequency === freq, 'notification-selector': notificationsctrl.alerts.frequency !== freq}" style="padding: 5px;" ng-repeat="freq in notificationsctrl.frequencies" ng-click="notificationsctrl.alerts.frequency = freq"><b>[[freq]]</b></span></p>
-            <div class="row text-center" ng-show="notificationsctrl.alerts.frequency === 'custom'">
+            <div class="row text-center" ng-show="notificationsctrl.alerts.frequency === 'weekly'">
               <div class="col-xs-9">
                 <p class="tertiary-text"><span ng-class="{'notification-selector-selected': notificationsctrl.alerts.times[$index].enabled, 'notification-selector': notificationsctrl.alerts.times[$index].enabled}" style="padding: 5px;" ng-repeat="day in notificationsctrl.days" ng-click="notificationsctrl.toggleAlertsTime($index)"><b>[[day]]</b></span></p>
               </div>

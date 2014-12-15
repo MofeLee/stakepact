@@ -23,8 +23,8 @@
     for(var i = 0; i<7; i++){
       defaultTimes[i] = {
         enabled: false,
-        hours: 9,
-        minutes: 0,
+        hour: 9,
+        minute: 0,
         am: true
       };
     }
@@ -34,8 +34,8 @@
       contactType: 'email', 
       frequency: 'weekly', 
       times: defaultTimes, 
-      hour: 9, 
-      am: false,
+      hour: defaultTimes[0].hour, 
+      am: defaultTimes[0].am,
       enabled: false
     };
 
@@ -93,7 +93,7 @@
     // change AM/PM for the context and change all the individual day reminders accordingly
     function toggleAM(context){
       context.am = !context.am;
-      _each(context.times, function(obj){
+      _.each(context.times, function(obj){
         obj.am = context.am;
       });
     }
@@ -149,7 +149,7 @@
         // update the model ~ a more sophisticated model should do this in a watch function
         _.each(_.where(context.times, {enabled: true}), function(obj){
           obj.hour = context.hour;
-          obj.minutes = 0;
+          obj.minute = 0;
           obj.am = context.am;
         });
 
@@ -158,7 +158,7 @@
         _.each(_.where(context.times, {enabled: true}), function(obj, index){
           settings.reminders.push({
             hour: obj.hour + (obj.am? 0 : 12),
-            minutes: 0,
+            minute: 0,
             day: index
           });
         });
