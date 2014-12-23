@@ -5,6 +5,8 @@
 
   function authService($rootScope, $q){
     var vm = this;
+    var currentId;
+
     vm.getLoginStatus = function(roles){
       var defer = $q.defer();
 
@@ -22,6 +24,7 @@
               defer.resolve($rootScope.currentUser);
             }
           }else{
+            currentId = null;
             defer.reject({status: 401, description: 'unauthorized'});
           }
           watcher();  // end the watcher if not loggingIn

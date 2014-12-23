@@ -6,7 +6,7 @@ Schema.UserProfile = new SimpleSchema({
   name: {
     type: String,
     label: "name",
-    regEx: /^[a-z0-9A-z .]{3,30}$/,
+    regEx: /^[a-z0-9A-z . -]{3,30}$/,
     optional: true
   },
   birthday: {
@@ -20,7 +20,7 @@ Schema.UserProfile = new SimpleSchema({
   },
   organization : {
     type: String,
-    regEx: /^[a-z0-9A-z .]{3,30}$/,
+    regEx: /^[a-z0-9A-z . -]{3,30}$/,
     optional: true
   },
   website: {
@@ -59,7 +59,8 @@ Schema.User = new SimpleSchema({
   phone: {
     type: String,
     label: "phone number",
-    regEx: phoneRegex
+    regEx: phoneRegex,
+    optional: true
   },
   "emails.$.address": {
     type: String,

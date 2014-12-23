@@ -56,13 +56,22 @@
           <label class="text-uppercase primary-text" ng-class="{'input-error': stakesctrl.stakes.ammount && !stakesctrl.isValidAmmount(stakesctrl.stakes.ammount), 'money': stakesctrl.isValidAmmount(stakesctrl.stakes.ammount), 'lightgreen': !stakesctrl.stakes.ammount}"> $</label>
           <input edit-inline type="text" class="text-uppercase text-left primary-text no-outline" ng-class="{'input-error': stakesctrl.stakes.ammount && !stakesctrl.isValidAmmount(stakesctrl.stakes.ammount), 'money': !stakesctrl.stakes.ammount || stakesctrl.isValidAmmount(stakesctrl.stakes.ammount)}" placeholder="100" ng-model="stakesctrl.stakes.ammount" maxlength="10">
           <label class="text-uppercase secondary-text">every week</label>
+          
+          <div class="row text-center" ng-show="stakesctrl.hasCreditCardId">
+            <div class="col-xs-12" ng-show="!stakesctrl.cardType">
+              <div class="btn primary-button text-uppercase" style="margin: 1vw" ng-click="stakesctrl.cardType = 'existing credit card'">existing credit card</div>
+              <div class="btn primary-button text-uppercase" style="margin: 1vw" ng-click="stakesctrl.cardType = 'new credit card'">new credit card</div>
+            </div>
+            <h1 ng-show="stakesctrl.cardType" class="col-xs-12 text-uppercase secondary-text" style="font-weight: 700;">[[stakesctrl.cardType]]<a ng-click="stakesctrl.cardType = null;"><sup><span class="glyphicon glyphicon-remove"> </span></sup></a></h1>
+          </div>
+
           <div class="row">
             <div class="col-xs-offset-3 col-xs-6 text-uppercase">
               
               <br>
 
               <!-- credit card html useful with whitelist version of wepay -->       
-              <div class="row">
+              <div class="row" ng-show="!stakesctrl.hasCreditCardId || stakesctrl.cardType === 'new credit card'">
                 <div class="col-xs-12" style="white-space: nowrap; border: 0.5vw solid transparent; height: 30vw; border-radius: 3vw; border-color: white;">
                   <div class="row">
                     <div class="col-xs-offset-1 col-xs-10">
@@ -125,7 +134,7 @@
             </div>
           </div>
           <br>
-          <button type="submit" class="btn primary-button text-uppercase" ng-disabled="!(selectedCharity && stakesctrl.stakes.charityType && stakesctrl.acceptConditions && stakesctrl.stakes.ammount && stakesctrl.isValidAmmount(stakesctrl.stakes.ammount))">set stakes</button>
+          <button type="submit" class="btn primary-button text-uppercase" ng-disabled="!stakesctrl.isCompleteStakesInfo() || !stakesctrl.isCompleteCreditCardInfo()">set stakes</button>
         </form>
       </div>
     </div>

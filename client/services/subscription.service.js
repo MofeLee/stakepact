@@ -5,11 +5,21 @@ subscriptionService.$inject = ['$q'];
 function subscriptionService($q){
   var subscriptions = {};
   var service = {
+    clearSubscriptions: clearSubscriptions,
     getSubscriptions: getSubscriptions,
     subscribe: subscribe
   };
 
   return service;
+
+  function clearSubscriptions(collection){
+    if(collection){
+      _.each(subscriptionService[collection], function(obj){
+        obj.stop();
+      });
+      subscriptions[collection] = {};
+    }
+  }
 
   function getSubscriptions(collection){
     if(collection){
@@ -52,7 +62,8 @@ function subscriptionService($q){
           subscriptions[collection][args[2]].stop();
         }
       }
-
+      
+      console.log(args);
       subscriptions[collection][args[2]] = Meteor.subscribe.apply(this, subscribeArgs);
     }else{
       defer.reject("arguments not properly configured");

@@ -3,9 +3,9 @@
 
   angular.module('app').controller('SignupCtrl', SignupCtrl);
 
-  SignupCtrl.$inject = ['$log', '$scope', '$location', '$state', '$stateParams', 'commitService', 'authService'];
+  SignupCtrl.$inject = ['$log', '$scope', '$location', '$state', '$stateParams', 'commitService', 'authService', 'subscriptionService'];
 
-  function SignupCtrl($log, $scope, $location, $state, $stateParams, commitService, authService){
+  function SignupCtrl($log, $scope, $location, $state, $stateParams, commitService, authService, subscriptionService){
     var vm = this;
     vm.activate = activate;
     vm.loginWithFacebook = loginWithFacebook;
@@ -17,14 +17,11 @@
       vm.commitmentString = commitService.getCommitmentString();
 
       // reroute user on login/signup
-      $scope.$on('loggedIn', function(){
+      $scope.$on('loggingIn', function(){
         authService.getLoginStatus().then(
         function(){
-          console.log("here");
-          console.log(authService.getLoginStatus());
           var commitment = commitService.getCommitment();
           if($stateParams.create_commitment && commitment && !commitment._id){  // upload commitment if parm is passed and commitment isn't in mongo 
-            console.log("uploading here");
             commitService.uploadCommitment().then(function(){
               proceed();
             }, function(error){

@@ -1,5 +1,8 @@
 {
   "dependencies": {
+    "datejs": {
+      "version": "1.0.0-rc3"
+    },
     "wepay": {
       "version": "0.0.4"
     }

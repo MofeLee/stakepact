@@ -1,7 +1,4 @@
-angular.module("app").run(function($rootScope, $state, $subscribe) {
-  // subscribe to user data
-  // subscriptionService.subscribe("users", true, "my_data");
-
+angular.module("app").run(function($rootScope, $state) {
   // avoid using stateChangeStart because you want to resolve things instead of using rules
   // resolving is better for promises
   // in this specific case, you want to wait for logging in to complete before checking for authorization
@@ -10,8 +7,8 @@ angular.module("app").run(function($rootScope, $state, $subscribe) {
   });
 
   // let the world know every time loggedIn changes
-  $rootScope.$watch('loggedIn', function(loggedIn){
-    $rootScope.$broadcast('loggedIn');
+  $rootScope.$watch('currentUser', function(loggingIn){
+    $rootScope.$broadcast('loggingIn');
   });
 
   $rootScope.$on('$stateChangeError', function(event, toState, toParams, fromState, fromParams, error){ 
@@ -219,6 +216,7 @@ angular.module("app").config(['$urlRouterProvider', '$stateProvider', '$location
             return defer.promise;
           },
           stakes: function(commitService){
+            console.log(commitService.getStakes());
             return commitService.getStakes();
           },
           notifications: function(commitService) {

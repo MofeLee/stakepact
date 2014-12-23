@@ -17,7 +17,7 @@
         <div class="row text-left" ng-show="notificationsctrl.reminders.enabled">
           <br>
           <div class="col-xs-offset-2 col-xs-10">
-            <p class="tertiary-text">remind me <span ng-class="{'notification-selector-selected': notificationsctrl.reminders.frequency === freq, 'notification-selector': notificationsctrl.reminders.frequency !== freq}" style="padding: 0.5vw;" ng-repeat="freq in notificationsctrl.frequencies" ng-click="notificationsctrl.reminders.frequency = freq"><b>[[freq]]</b></span></p>
+            <p class="tertiary-text">remind me: <span ng-class="{'notification-selector-selected': notificationsctrl.reminders.frequency === freq, 'notification-selector': notificationsctrl.reminders.frequency !== freq}" style="padding: 0.5vw;" ng-repeat="freq in notificationsctrl.frequencies" ng-click="notificationsctrl.reminders.frequency = freq"><b>[[freq]]</b></span></p>
             <div class="row text-center" ng-show="notificationsctrl.reminders.frequency === 'weekly'">
               <div class="col-xs-9">
                 <p class="tertiary-text"><span ng-class="{'notification-selector-selected': notificationsctrl.reminders.times[$index].enabled, 'notification-selector': notificationsctrl.reminders.times[$index].enabled}" style="padding: 5px;" ng-repeat="day in notificationsctrl.days" ng-click="notificationsctrl.toggleRemindersTime($index)"><b>[[day]]</b></span></p>
@@ -28,7 +28,7 @@
               <input class="col-xs-1 text-uppercase text-right tertiary-text no-outline" style="font-weight: bold; padding-right: 0.5vw" type="text" placeholder="9" maxlength='2' ng-model="notificationsctrl.reminders.hour">
               <label class="col-xs-1 tertiary-text" style="padding-left: 0.5vw" ng-click="notificationsctrl.toggleRemindersAM()"><b>[[notificationsctrl.reminders.am && 'AM' || 'PM']]</b></label>
             </div>
-            <p class="tertiary-text">remind me by 
+            <p class="tertiary-text">remind me by: 
               <span ng-class="{'notification-selector-selected': notificationsctrl.reminders.contactType === contactType, 'notification-selector': notificationsctrl.reminders.contactType !== contactType}" style="padding: 5px;" ng-repeat="contactType in notificationsctrl.contactTypes" ng-click="notificationsctrl.reminders.contactType = contactType"><b>[[contactType]]</b></span>
             </p>
             <div class="row" ng-show="notificationsctrl.reminders.contactType === 'text'">
@@ -55,25 +55,25 @@
           </div>
           <div class="col-xs-8">
             <p class="text-left tertiary-text">
-              send me alerts when I fail to report [[notificationsctrl.commitment.activity]] and scheduled to donate to [[notificationsctrl.stakes.charityName]]
+              send me alerts when I fail to [[notificationsctrl.commitment.activity]] and I'm scheduled to donate to [[selectedCharity.name]]
             </p>
           </div>
         </div>
         <div class="row text-left" ng-show="notificationsctrl.alerts.enabled">
           <br>
           <div class="col-xs-offset-2 col-xs-10">
-            <p class="tertiary-text">alert me <span ng-class="{'notification-selector-selected': notificationsctrl.alerts.frequency === freq, 'notification-selector': notificationsctrl.alerts.frequency !== freq}" style="padding: 5px;" ng-repeat="freq in notificationsctrl.frequencies" ng-click="notificationsctrl.alerts.frequency = freq"><b>[[freq]]</b></span></p>
+            <p class="tertiary-text">alert me: <span ng-class="{'notification-selector-selected': notificationsctrl.alerts.frequency === freq, 'notification-selector': notificationsctrl.alerts.frequency !== freq}" style="padding: 5px;" ng-repeat="freq in notificationsctrl.frequencies" ng-click="notificationsctrl.alerts.frequency = freq"><b>[[freq]]</b></span></p>
             <div class="row text-center" ng-show="notificationsctrl.alerts.frequency === 'weekly'">
               <div class="col-xs-9">
                 <p class="tertiary-text"><span ng-class="{'notification-selector-selected': notificationsctrl.alerts.times[$index].enabled, 'notification-selector': notificationsctrl.alerts.times[$index].enabled}" style="padding: 5px;" ng-repeat="day in notificationsctrl.days" ng-click="notificationsctrl.toggleAlertsTime($index)"><b>[[day]]</b></span></p>
               </div>
             </div>
             <div class="row">
-              <label class="col-xs-1 tertiary-text text-left">time:</label>
+              <label class="col-xs-1 tertiary-text text-left">time: </label>
               <input class="col-xs-1 text-uppercase text-right tertiary-text no-outline" style="font-weight: bold; padding-right: 0.5vw" type="text" placeholder="9" maxlength='2' ng-model="notificationsctrl.alerts.hour">
               <label class="col-xs-1 tertiary-text" style="padding-left: 0.5vw" ng-click="notificationsctrl.toggleAlertsAM()"><b>[[notificationsctrl.alerts.am && 'AM' || 'PM']]</b></label>
             </div>
-            <p class="tertiary-text">alert me by 
+            <p class="tertiary-text">alert me by: 
               <span ng-class="{'notification-selector-selected': notificationsctrl.alerts.contactType === contactType, 'notification-selector': notificationsctrl.alerts.contactType !== contactType}" style="padding: 5px;" ng-repeat="contactType in notificationsctrl.contactTypes" ng-click="notificationsctrl.alerts.contactType = contactType"><b>[[contactType]]</b></span>
             </p>
 

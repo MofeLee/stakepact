@@ -21,9 +21,10 @@
     function activate() {
 
       // reroute user to signup if logout mid session
-      $scope.$on('loggedIn', function(loggedIn){
+      $scope.$on('loggingIn', function(loggingIn){
         authService.getLoginStatus().then(
           function(user){
+            subscriptionService.subscribe('users', false, 'my_data');
             subscriptionService.subscribe("charities", true, "my_charities").then(function(){
               $collection(Charities).bind($scope, 'charities', false, true);
             });

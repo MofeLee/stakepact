@@ -15,7 +15,7 @@
     
     function activate(){
       // reroute user to signup if logout mid session
-      $scope.$on('loggedIn', function(loggedIn){
+      $scope.$on('loggingIn', function(loggedIn){
         authService.getLoginStatus(adminRoles).then(
           function(user){
 

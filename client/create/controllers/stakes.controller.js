@@ -10,6 +10,8 @@
     vm.activate = activate;
     vm.clearStakes = clearStakes;
     vm.commitmentString = commitService.getCommitmentString();
+    vm.isCompleteStakesInfo = isCompleteStakesInfo;
+    vm.isCompleteCreditCardInfo = isCompleteCreditCardInfo;
     vm.isValidAmmount = isValidAmmount;
     vm.selectCharity = selectCharity;
     vm.stakes = stakes? stakes:{};
@@ -18,7 +20,9 @@
     vm.activate();
 
     function activate(){
-      Session.set("charityChannel", "verified");
+      hasCreditCardId().then(function(res){
+        vm.hasCreditCardId = res;
+      });
 
       subscriptionService.subscribe("charities", true, "charities", "verified").then(function(){
         $collection(Charities).bind($scope, 'charities', false, false);
@@ -30,7 +34,7 @@
         }
       });
 
-      $scope.$on('loggedIn', function(loggedIn){
+      $scope.$on('loggingIn', function(loggedIn){
         authService.getLoginStatus().then(
           function(user){
             // should already be logged in to view page
@@ -48,26 +52,58 @@
       $state.go('create.notifications');
     }
 
-    function isValidAmmount(val) {
-      return isNumber(val) && parseFloat(val) >= 1;
+    function hasCreditCardId(){
+      var defer = $q.defer();
+      Meteor.call('hasCreditCardId', Meteor.userId(), function(error, res){
+        if(error){
+          defer.reject(error);
+        }else{
+          defer.resolve(res);
+        }
+      });
+      return defer.promise;
+    }
+
+    function isCompleteCreditCardInfo(){
+      return !!((vm.cardholderName && vm.email && vm.cardNumber1 && vm.cardNumber2 && vm.cardNumber3 && vm.cardNumber4 && vm.cvv && vm.expirationMonth && vm.expirationYear && vm.zip)  || (vm.hasCreditCardId && vm.cardType === 'existing credit card'));
+    }
+
+    function isCompleteStakesInfo(){
+      return !!(vm.stakes.ammount && vm.acceptConditions && isValidAmmount(vm.stakes.ammount) && $scope.selectedCharity && vm.stakes.charityType);
     }
 
     function isNumber(n){
       return utilityService.isNumber(n);
     }
 
+    function isValidAmmount(val) {
+      return isNumber(val) && parseFloat(val) >= 1;
+    }
+
     function selectCharity(charity){
       $scope.selectedCharity = charity;
     }
 
+    function setCardType(type){
+      vm.cardType = type;
+    }
+
     function submit(){
       console.log("submitted");
-      if(vm.stakes.ammount && vm.acceptConditions && isValidAmmount(vm.stakes.ammount) && $scope.selectedCharity && vm.stakes.charityType){
-        commitService.setStakes($scope.selectedCharity._id, vm.stakes.charityType, vm.stakes.ammount);
-        submitCreditCard().then(function(response){
-          console.log(response);
-          //$state.go('create.notifications');
-        }, function(error){
+      if(isCompleteStakesInfo() && isCompleteCreditCardInfo()){
+        commitService.setStakes({charity: $scope.selectedCharity._id, charityType: vm.stakes.charityType, ammount: vm.stakes.ammount}).then(function(){
+          if(vm.hasCreditCardId && vm.cardType === 'existing credit card') {
+            $state.go('create.notifications');
+          } else {
+            submitCreditCard().then(function(docs){
+              console.log(docs);
+              $state.go('create.notifications');
+            }, function(error){
+              console.log(error);
+            });
+          }
+        },
+        function(error){
           console.log(error);
         });
       }else{
@@ -79,7 +115,7 @@
       }
     }
 
-     // fancy credit card form -- requires WePay Clear and different pricing
+    // fancy credit card form -- requires WePay Clear and different pricing
     function submitCreditCard(){
       var defer = $q.defer();
 

@@ -11,8 +11,7 @@ Meteor.methods({
     var loggedInUser = Meteor.user();
 
     if (!loggedInUser ||
-        !Roles.userIsInRole(loggedInUser, 
-                            ['manage-users','admin'], group)) {
+        !Roles.userIsInRole(loggedInUser, ['manage-users','admin'], group)) {
       throw new Meteor.Error(403, "Access denied");
     }
 
@@ -29,12 +28,8 @@ Meteor.methods({
   deleteUser: function (targetUserId, group) {
     var loggedInUser = Meteor.user();
 
-    console.log(Meteor.userId());
-    console.log(targetUserId);
-
     if (!loggedInUser ||
-        (!Roles.userIsInRole(loggedInUser, 
-                            ['manage-users','admin'], group) && Meteor.userId() != targetUserId)) {
+        (!Roles.userIsInRole(loggedInUser, ['manage-users','admin'], group) && Meteor.userId() != targetUserId)) {
       throw new Meteor.Error(403, "Access denied");
     }
 
@@ -43,11 +38,22 @@ Meteor.methods({
 
     // do other actions required when a user is removed...
     return Meteor.users.remove({_id: targetUserId});
+  },
+
+  hasCreditCardId: function (targetUserId) {
+    var loggedInUser = Meteor.user();
+
+    if (!loggedInUser ||
+        (!Roles.userIsInRole(loggedInUser, ['manage-users','admin']) && Meteor.userId() != targetUserId)) {
+      throw new Meteor.Error(403, "Access denied");
+    }
+
+    return !!Meteor.users.findOne({_id: targetUserId}).credit_card_id;
   }
 });
 
 Accounts.validateNewUser(function (user) {
-  var loggedInUser = Meteor.user();
+  var loggedInUser = this.userId;
 
   if (!loggedInUser || Roles.userIsInRole(loggedInUser, ['admin','manage-users'])) {
     return true;

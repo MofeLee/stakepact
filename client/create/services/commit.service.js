@@ -20,6 +20,7 @@
       getNotifications: getNotifications,
       getStakes: getStakes,
       getStakesString: getStakesString,
+      setCheckins: setCheckins,
       setCommitment: setCommitment,
       setNotifications: setNotifications,
       setStakes: setStakes,
@@ -88,8 +89,9 @@
     }
 
     // return a human readable string that represents the commitment
-    function getCommitmentString() {
-      return commitment? "I vow to " + commitment.activity + " " + frequencies[commitment.frequency-1] + " for the next " + commitment.duration + " weeks": null;
+    function getCommitmentString(c) {
+      c = c? c: commitment;
+      return c? "I vow to " + c.activity + " " + frequencies[c.frequency-1] + " for the next " + c.duration + " weeks": null;
     }
 
     function getNotifications() {
@@ -102,6 +104,18 @@
 
     function getStakesString() {
       return commitment? (commitment.stakes? "$" + commitment.stakes.ammount + " every week": null): null;
+    }
+
+    function setCheckins(commitmentId, dates){
+      var defer = $q.defer();
+      Commitments.update({_id: commitmentId}, {$set: {checkins: dates}}, function(error, docs){
+        if(error){
+          defer.reject(error);
+        }else{
+          defer.resolve(docs);
+        }
+      });
+      return defer.promise;
     }
 
     // set the commitment object
@@ -188,6 +202,8 @@
 
     // set stakes for the commitment
     function setStakes(stakes){
+      console.log(stakes);
+
       var defer = $q.defer();
 
       if(stakes && stakes.charity && stakes.charityType && stakes.ammount){
@@ -204,6 +220,7 @@
                 defer.reject(err);
               }else{
                 commitment.stakes = stakes;
+                console.log(commitment.stakes);
                 defer.resolve(docs);
               }
             });

@@ -7,12 +7,12 @@ Schema.NotificationDetails = new SimpleSchema({
     allowedValues: ['text', 'email'],
     optional: true
   },
-  // frequency: {
-  //   type: String,
-  //   label: 'frequency',
-  //   allowedValues: ['daily', 'weekly'],
-  //   optional: true
-  // },
+  frequency: {
+    type: String,
+    label: 'frequency',
+    allowedValues: ['daily', 'weekly'],
+    optional: true
+  },
   //  when you wanna make serious notifications!
   times: {
     type: [Object],
@@ -77,41 +77,9 @@ Schema.Commitment = new SimpleSchema({
     type: String,
     label: "owner",
   },
-  checkins : {  // stores a Date object representing the day and a boolean for whether or not the user has checked in
-    type: [Object],
-     autoValue: function() {
-      if (this.isInsert) {
-        var startDate = new Date(); // get the current time
-        var copiedDate = new Date(startDate.getTime()); // copy the current time object
-        var duration = this.field("duration").value;  // determine the duration of the commitment
-        var checkins = [{date: copiedDate, checkedIn: false}];  // create the first element in the array with the copied object
-        for(var i = 1; i < duration*7; i++){  // increment the date and add each day to array for 7 days * duration in weeks
-          checkins[i] = {date: new Date(startDate.setDate(startDate.getDate()+1)), checkedIn: false};
-        }
-        return checkins;
-      } else {  // if updating, if the duration increases, add more unchecked elements to the array
-        if(this.field("duration").operator==="$set"){
-          var thisCommitment = Commitments.findOne({_id: this.docId});  // right now, the best way i can see to access this field is by searching mongo
-          if(thisCommitment.checkins){
-            var diff = this.field("duration").value*7 - thisCommitment.checkins.length; // find the difference between duration in weeks * 7 and current array length
-            if(diff>0){
-              var lastDate = _.last(thisCommitment.checkins).date;
-              newCheckins = [];
-              for(var j = 0; j < diff; j++){
-                newCheckins[j] = {date: new Date(lastDate.setDate(lastDate.getDate()+1)), checkedIn: false};  // create new elements for each new day 
-              }
-              return {$push: {$each: newCheckins}}; // push new elements onto checkins
-            }
-          }
-        }
-      }
-    }
-  },
-  "checkins.$.date": {
-    type: Date
-  },
-  "checkins.$.checkedIn": {
-    type: Boolean
+  checkins : {  // stores an array of strings representing checked-in days e.g. ['2014-12-31', '2015-01-01']
+    type: [String],
+    optional: true
   },
   activity: {
     type: String,
@@ -179,3 +147,50 @@ Commitments.allow({
     return userId && (commitment.owner === userId || Roles.userIsInRole(userId, ['manage-users','admin']));
   }
 });
+
+// after updating a commitment, automatically insert/remove/update associated transactions
+Commitments.after.update(function (userId, doc, fieldNames, modifier, options) {
+  // if checkins, frequency, or duration are modified, update pending transactions
+  if(_.intersection(fieldNames,['checkins', 'frequency', 'duration']).length){
+    updatePendingTransactions(doc);
+  }
+
+  // if stakes are removed, remove all pending transactions
+  // if stakes are just modified, pending transactions don't store these items so no changes
+  if(_.contains(fieldNames, 'stakes') && !doc.stakes){
+    Transactions.remove({commitment: doc._id, pending: true});
+  }
+}, {fetchPrevious: false});
+
+
+// insert new transactions for failed weeks within active reporting periods
+// remove transactions for weeks that are no longer failed
+function updatePendingTransactions(doc){
+  var dividedWeeks = Meteor.call('getSuccessReport', doc, 3); // check reporting periods up to 3 weeks ago
+  var successfulWeeks = dividedWeeks.successful;
+  var failedWeeks = dividedWeeks.failed;
+
+  // find the pending transactions for the commitment
+  var pendingTransactions = Transactions.find({commitment: doc._id, pending: true}).fetch();
+  pendingWeeks = _.pluck(pendingTransactions, 'reportingPeriod');
+
+  // insert new transactions for failed weeks within active reporting periods
+  var newTransactions = _.difference(failedWeeks, pendingWeeks);
+  _.each(newTransactions, function(period){
+    Transactions.insert({
+      commitment: doc._id,
+      reportingPeriod: period,
+      transactionDate: Date.parse(period).add(3).weeks(),
+      pending: true
+    });
+  });
+
+  // remove transactions for weeks that are no longer failed
+  var removableTransactions = _.difference(pendingWeeks, failedWeeks);
+  _.each(removableTransactions, function(period){
+    Transactions.remove({
+      commitment: doc._id,
+      reportingPeriod: period
+    });
+  });
+}
