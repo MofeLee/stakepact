@@ -6,6 +6,7 @@
   CommitCtrl.$inject = ['$log', '$scope', '$timeout', '$state', 'commitService'];
 
   function CommitCtrl($log, $scope, $timeout, $state, commitService){
+    
     var vm = this;
     vm.activate = activate;
     vm.activity = null;

@@ -52,6 +52,7 @@ Meteor.methods({
   }
 });
 
+// don't allow existing low level user to create new users other than themselves
 Accounts.validateNewUser(function (user) {
   var loggedInUser = this.userId;
 

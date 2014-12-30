@@ -153,6 +153,7 @@
       // prep the settings for mongo entry
       settings.reminders = prepNotificationForMongo(vm.reminders);
       settings.alerts = prepNotificationForMongo(vm.alerts);
+      settings.timezone = jstz.determine().name();  // set the timezone for the alerts according to the browser
 
       // text notifications require a phone number
       if(((settings.reminders.contactType == 'text' && settings.reminders.enabled) || 

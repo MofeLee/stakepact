@@ -8,19 +8,20 @@ Meteor.startup(function () {
     ];
 
     _.each(users, function (user) {
-      
+      console.log(user);
+
       var id = Accounts.createUser({
         email: user.email,
         password: "apple1",
         profile: { name: user.name }
       });
 
+      console.log('here ' + id);
       if (user.roles.length > 0) {
         // Need _id of existing user record so this call must come 
         // after `Accounts.createUser` or `Accounts.onCreate`
-        Roles.addUsersToRoles(id, user.roles);
+        Roles.addUsersToRoles(id, user.roles, Roles.GLOBAL_GROUP);
       }
-
     });
   }
 });
