@@ -60,27 +60,26 @@ function updatePendingTransactions(doc){
 }
 
 function updateNotifications(commitmentBefore, commitmentAfter){
-  removeDisabledNotifications('reminders');
-  removeDisabledNotifications('alerts');
-
-  insertAndUpdateNotifications('reminders');
-  insertAndUpdateNotifications('alerts');
 
   //  remove any newly disabled notifications
   var removeDisabledNotifications = function(type){
-    if(commitmentBefore.notifications[type] && commitmentBefore.notifications[type].enabled && commitmentBefore.notifications[type].times){
+    // check if notifications existed and were enabled for the commitment
+    if(commitmentBefore.notifications && commitmentBefore.notifications[type] && commitmentBefore.notifications[type].enabled && commitmentBefore.notifications[type].times){
       
-      var daysAfter;  // create an array of the active reminder days in the new commitment
+      var daysAfter;  // create an array of the active notification days in the new commitment
       
-      if(commitmentAfter.notifications[type] && commitment.notifications[type].enabled && commitmentBefore.notifications[type].times){
-        daysAfter = _.pluck(commitmentAfter.notifications[type].times, 'days');
+      if(commitmentAfter.notifications[type] && commitmentAfter.notifications[type].enabled && commitmentAfter.notifications[type].times){
+        daysAfter = _.pluck(commitmentAfter.notifications[type].times, 'day');
       }else{
-        daysAfter  = [];  // if reminders are disabled or don't exist
+        daysAfter  = [];  // if notifications are disabled or don't exist
       }
-   
+
       var notificationsToRemove = _.filter(commitmentBefore.notifications[type].times, function(time){
         return !_.contains(daysAfter, time.day);
       });
+
+      console.log('removing notifications');
+      console.log(notificationsToRemove);
 
       if(notificationsToRemove.length){
         Notifications.remove({_id: {$in: _.pluck(notificationsToRemove, 'notification_id')}});
@@ -97,15 +96,27 @@ function updateNotifications(commitmentBefore, commitmentAfter){
 
       _.each(commitmentAfter.notifications[type].times, function(time){
         newTime = moment.utc(0).add(time.day, 'days').add(time.hour, 'hours').add(time.minute + offset, 'minutes').toDate();  // utc time + timezone offset, so the notification is sent on time!
-        
+
         if(time.notification_id){
           Notifications.update({_id: time.notification_id}, {$set: {time: newTime}});
         } else {
-          Notifications.insert({commitment: commitmentAfter._id, time: newTime, type: 'reminder'});
+          Notifications.insert({commitment: commitmentAfter._id, time: newTime, type: 'reminder'}, function(error, id){
+            if(error){
+
+            }else{
+              
+            }
+          });
         }
 
       });
 
     }
   };
+
+  removeDisabledNotifications('reminders');
+  removeDisabledNotifications('alerts');
+
+  insertAndUpdateNotifications('reminders');
+  insertAndUpdateNotifications('alerts');
 }

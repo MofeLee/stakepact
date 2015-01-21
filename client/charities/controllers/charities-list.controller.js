@@ -1,9 +1,9 @@
 (function() {
   angular.module('app').controller('CharitiesListCtrl', CharitiesListCtrl);
 
-  CharitiesListCtrl.$inject = ['$log', '$collection', '$scope', '$state', 'authService', 'adminRoles'];
+  CharitiesListCtrl.$inject = ['$log', '$meteorCollection', '$scope', '$state', 'authService', 'adminRoles'];
 
-  function CharitiesListCtrl($log, $collection, $scope, $state, authService, adminRoles) {
+  function CharitiesListCtrl($log, $meteorCollection, $scope, $state, authService, adminRoles) {
     var vm = this;
     vm.activate = activate;
     vm.removeCharity = removeCharity;
@@ -27,7 +27,7 @@
       });
 
       // bind to Charities collection
-      $collection(Charities).bind($scope, 'charities', false, true);
+      $scope.charities = $meteorCollection(Charities, false).subscribe("charities");
     }
 
     function removeCharity(charity){

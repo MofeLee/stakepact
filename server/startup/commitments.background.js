@@ -5,17 +5,14 @@ SyncedCron.add({
   name: 'wrap up expired commitments',
   schedule: function(parser) {
     // parser is a later.parse object
-    return parser.text('every hour');
+    return parser.text('every 1 minutes');
   }, 
   job: function() {
-    // get the current utc day, hour, and minute
+    // get the current utc day
     var now = moment.utc();
-    var day = now.day();
-    var hour = now.hour();
-    var minute = now.minute();
 
     // create a date that represents the day, hour, and minute from utc time
-    var lookupTime = moment.utc(0).add(day, 'days').add(hour, 'hours').add(minute, 'minutes').toDate();
+    var lookupTime = moment.utc(0).add(now.day(), 'days').add(now.hour(), 'hours').add(now.minute(), 'minutes').toDate();
 
     // get all the commitments that report daily at this time
     var reportingCommitments = Commitment.find({
@@ -23,10 +20,12 @@ SyncedCron.add({
       'stakes': {$exists: true}
     }).fetch();
 
-    // clear reminders for all expired commitments
+    // get all expired commitments from the reporting commitments
     var expiredCommitments = _.filter(reportingCommitments, function(commitment){
       return moment(commitment.expiresAt).isSame(now) || moment(commitment.expiresAt).isBefore(now);
     });
+
+    // clear reminders for all expired commitments
     Notifications.remove({commitment: {$in: _.pluck(expiredCommitments, '_id')}, type: 'reminder'});
 
     // create pending transactions and process pending transactions that have exceeded grace period
@@ -61,6 +60,7 @@ SyncedCron.add({
 
       // process transactions that have exceeded grace period
       _.each(transactionsToBeProcessed, function(transaction){
+        console.log(transaction);
         // call wepay stuff here
         // send a receipt
         // CODE HERE!!!

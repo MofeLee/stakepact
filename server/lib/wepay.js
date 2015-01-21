@@ -1,5 +1,4 @@
 var wepay = Meteor.npmRequire('wepay').WEPAY;
-var Future = Npm.require('fibers/future');
 
 // local variables
 var wepay_settings = Meteor.settings.wepay;

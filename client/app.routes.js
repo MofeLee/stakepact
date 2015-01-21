@@ -1,14 +1,11 @@
 angular.module("app").run(function($rootScope, $state) {
-  // avoid using stateChangeStart because you want to resolve things instead of using rules
-  // resolving is better for promises
-  // in this specific case, you want to wait for logging in to complete before checking for authorization
-  $rootScope.$on('$stateChangeStart', function(e, to) {
-    if (!to.data || !angular.isFunction(to.data.rule)) return;
-  });
-
-  // let the world know every time loggedIn changes
-  $rootScope.$watch('currentUser', function(loggingIn){
-    $rootScope.$broadcast('loggingIn');
+  // watch the currentUser for changes and broadcast when currentUser logs in/out or changes ids
+  var latestUser = $rootScope.currentUser;
+  $rootScope.$watch('currentUser', function(currentUser){
+    if((!latestUser && currentUser) || (latestUser && !currentUser) || (latestUser && currentUser && latestUser._id != currentUser._id)){
+      latestUser = currentUser;
+      $rootScope.$broadcast('loggingIn');
+    }
   });
 
   $rootScope.$on('$stateChangeError', function(event, toState, toParams, fromState, fromParams, error){ 
@@ -44,25 +41,14 @@ angular.module("app").run(function($rootScope, $state) {
       case 'create.notifications':
         $state.go('create.stakes');
         break;
+      case 'create.dashboard':
+        $state.go('create.commit');
+        break;
       default :
         $state.go('404');
       }
     }
   });
-
-  // hacky -- we need to wait for rootScope.currentUser to resolve before we deal with states
-  // right now --> if you login on home page, redirect to dashboard
-  // var userRequiredStates = ['create.notifications', 'dashboard'];
-  // $rootScope.$watch('currentUser', function(currentUser){
-  //   if(currentUser) {
-
-  //     if($state.current.name === 'create.commit'){
-  //       $state.go('dashboard');
-  //     }
-  //   } else if(userRequiredStates.indexOf($state.current.name) !== -1) {
-  //     $state.go('create.commit');
-  //   }
-  // });
 });
 
 angular.module("app").config(['$urlRouterProvider', '$stateProvider', '$locationProvider',
@@ -75,13 +61,24 @@ angular.module("app").config(['$urlRouterProvider', '$stateProvider', '$location
     $stateProvider
       .state('dashboard', {
         url: '/dashboard',
-        template: UiRouter.template('dashboard.html'),
+        templateUrl: 'client/dashboard/views/dashboard.tpl',
         controller: 'DashboardCtrl',
         controllerAs: 'dashboardctrl',
         resolve: {
           isAuthorized: function(authService){
             var response = authService.getLoginStatus();
             return response;
+          },
+          commitments: function($q, $meteorSubscribe, $meteorCollection){
+            var defer = $q.defer();
+            $meteorSubscribe.subscribe('my_commitments').then(function(subscriptionHandle){
+              var commitments = $meteorCollection(Commitments, false);
+              if(commitments.length > 0)
+                defer.resolve(commitments);
+              else
+                defer.reject({status: 400, description: "no commitments found for user"});
+            });
+            return defer.promise;
           }
         }
       })
@@ -92,7 +89,7 @@ angular.module("app").config(['$urlRouterProvider', '$stateProvider', '$location
       })
       .state('charities.list', {
         url: '',
-        template: UiRouter.template('charities-list.html'),
+        templateUrl: 'client/charities/views/charities-list.tpl',
         controller: 'CharitiesListCtrl',
         controllerAs: 'charitieslistctrl',
         resolve: {
@@ -103,7 +100,7 @@ angular.module("app").config(['$urlRouterProvider', '$stateProvider', '$location
       })
       .state('charities.charity', {
         url: '/:charityId',
-        template: UiRouter.template('charity.html'),
+        templateUrl: 'client/charities/views/charity.tpl',
         controller: 'CharityCtrl',
         controllerAs: 'charityctrl',
         resolve: {
@@ -130,7 +127,7 @@ angular.module("app").config(['$urlRouterProvider', '$stateProvider', '$location
       })
       .state('register', {
         url: '/register',
-        template: UiRouter.template('register.html'),
+        templateUrl: 'client/charities/views/register.tpl',
         controller: 'RegisterCtrl',
         controllerAs: 'registerctrl',
         resolve: {
@@ -145,14 +142,14 @@ angular.module("app").config(['$urlRouterProvider', '$stateProvider', '$location
         template: '<ui-view/>'
       })
       .state('create.commit', {
-        url: '/commit?modify',
-        template: UiRouter.template('commit.html'),
+        url: '/commit',
+        templateUrl: 'client/create/views/commit.tpl',
         controller: 'CommitCtrl',
         controllerAs: 'commitctrl'
       })
       .state('create.signup', {
         url: '/signup?redirect_uri&create_commitment',
-        template: UiRouter.template('signup.html'),
+        templateUrl: 'client/create/views/signup.tpl',
         controller: 'SignupCtrl',
         controllerAs: 'signupctrl',
         resolve: {
@@ -170,7 +167,7 @@ angular.module("app").config(['$urlRouterProvider', '$stateProvider', '$location
       })
       .state('create.stakes', {
         url: '/stakes',
-        template: UiRouter.template('stakes.html'),
+        templateUrl: 'client/create/views/stakes.tpl',
         controller: 'StakesCtrl',
         controllerAs: 'stakesctrl',
         resolve: {
@@ -198,7 +195,7 @@ angular.module("app").config(['$urlRouterProvider', '$stateProvider', '$location
       })
       .state('create.notifications', {
         url: '/notifications',
-        template: UiRouter.template('notifications.html'),
+        templateUrl: 'client/create/views/notifications.tpl',
         controller: 'NotificationsCtrl',
         controllerAs: 'notificationsctrl',
         resolve: {
@@ -226,7 +223,7 @@ angular.module("app").config(['$urlRouterProvider', '$stateProvider', '$location
       })
       .state('unauthorized', {
         url: '/401',
-        template: UiRouter.template('401.html'),
+        templateUrl: 'client/error/views/401.tpl',
       })
       .state('404', {
         url: '/404',

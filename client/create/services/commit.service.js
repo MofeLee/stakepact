@@ -4,11 +4,12 @@
 
   angular.module('app').factory('commitService', commitService);
 
-  commitService.$inject = ['$q', 'subscriptionService', 'utilityService'];
+  commitService.$inject = ['$q', 'utilityService', '$meteorCollection', '$meteorMethods', '$meteorObject'];
 
-  function commitService($q, subscriptionService, utilityService) {
+  function commitService($q, utilityService, $meteorCollection, $meteorMethods, $meteorObject) {
+    
     var commitment = null;
-    var subscriptions = {};
+    var commitments = $meteorCollection(Commitments, false).subscribe('my_commitments');
     var frequencies = ["1x weekly", "2x weekly", "3x weekly", "4x weekly", "5x weekly", "6x weekly", "daily"];
 
     var service = {
@@ -16,16 +17,15 @@
       clearCommitment: clearCommitment,
       clearStakes: clearStakes,
       getCommitment: getCommitment,
+      getAllCommitments: getAllCommitments,
       getCommitmentString: getCommitmentString,
       getNotifications: getNotifications,
       getStakes: getStakes,
       getStakesString: getStakesString,
       setCheckins: setCheckins,
-      setCommitment: setCommitment,
+      setCommitmentBasics: setCommitmentBasics,
       setNotifications: setNotifications,
-      setStakes: setStakes,
-      subscribeToCommitments: subscribeToCommitments,
-      uploadCommitment: uploadCommitment
+      setStakes: setStakes
     };
 
     return service;
@@ -35,19 +35,17 @@
     // clear the commitment ~ remove if stored in mongo, and remove from user commitments
     function clearCommitment(){
       var defer = $q.defer();
-      if(commitment._id && commitment.owner){
-        Commitments.remove({_id: commitment._id}, function(error, response){
-          if(!error){
-            Meteor.users.update({_id: commitment.owner}, {$pull: {commitment: commitment._id}}, function(e, res){
-              if(!e){
-                defer.resolve(res);
-              }else{
-                defer.reject(e);
-              }
-            });
-          }else{
-            defer.reject(error);
-          }
+      if(commitment._id){
+        commitments.remove(commitment._id).then(function(result){
+          
+          var user = $meteorObject(Meteor.users, Meteor.userId(), false).subscribe('my_data');
+          user.commitments = _.without(user.commitments, commitment._id);
+          user.save();
+
+          commitment = null;
+          defer.resolve(result);
+        }, function(error){
+          defer.reject(error);
         });
       }else{
         commitment = null;
@@ -61,26 +59,18 @@
       var defer = $q.defer();
 
       if(commitment.stakes && commitment._id){
-        subscribeToCommitments('my_commitments').then(function(){
-          Commitments.update({_id: commitment._id}, {$unset: {
-            stakes: ''
-          }}, function(err, docs){
-            if(err){
-              defer.reject(err);
-            }else{
-              commitment.stakes = null;
-              defer.resolve(docs);
-            }
-          });
-        }, function(error){
-          defer.reject(error);
-        });
+        commitment.stakes = null;
+        commitment.save();
+        defer.resolve();
       } else {
         commitment.stakes = null;
         defer.resolve();
       }
-
       return defer.promise;
+    }
+
+    function getAllCommitments(){
+      return commitments;
     }
 
     // return the current commitment object
@@ -108,64 +98,50 @@
 
     function setCheckins(commitmentId, dates){
       var defer = $q.defer();
-      Commitments.update({_id: commitmentId}, {$set: {checkins: dates}}, function(error, docs){
-        if(error){
-          defer.reject(error);
-        }else{
-          defer.resolve(docs);
-        }
-      });
-      return defer.promise;
+      var currentCommitment = $meteorObject(Commitments, commitmentId, false);
+      currentCommitment.dates = dates;
+      currentCommitment.save();
     }
 
     // set the commitment object
     // will modify the commitment object if it already exists
     // will create a new commitment object in mongo if a user is logged in and there is no commitment._id
     // will modify commitment object in mongo if commitment._id exists
-    function setCommitment(activity, frequency, duration) {
+    function setCommitmentBasics(activity, frequency, duration) {
       var defer = $q.defer();
 
-      if(commitment){   // if commitment exists, modify commitment
-        commitment.activity = activity;
-        commitment.frequency = frequency;
-        commitment.duration = duration;
-        
-        // if the commitment is in mongo, update the commitment
-        if(commitment._id){
-          subscribeToCommitments('my_commitments').then(function(){
-            Commitments.update({_id: commitment._id}, {$set: {
-              activity: commitment.activity, 
-              frequency: commitment.frequency,
-              duration: commitment.duration
-            }}, function(error, docs){
-              if(error){
-                defer.reject(docs);
-              } else{
-                defer.resolve(docs);
-              }
-            });
-          },
-          function(error){
-            defer.reject(error);
-          });
-        }else{
-          defer.resolve(commitment);
-        }
-      } else {  // if the commitment doesn't exist, create it
-        commitment = {
-          activity: activity,
-          frequency: frequency,
-          duration: duration
-        };
+      commitment = commitment? commitment: {};
+
+      commitment.activity = activity;
+      commitment.frequency = frequency;
+      commitment.duration = duration;
+
+      if(commitment._id){
+        commitment.save();
+        defer.resolve(commitment);
+      }else{
+
         if(Meteor.userId()){  // if user exists, push new commitment to mongo and add to user commitments
-          uploadCommitment().then(function(response){
-            defer.resolve(response);
-          },function(error){
+          var user = $meteorObject(Meteor.users, Meteor.userId(), false).subscribe('my_data');
+          commitment.owner = Meteor.userId();
+          commitment.timezone = user.timezone? user.timezone : jstz.determine().name();
+          commitments.save(commitment).then(function(result){
+            commitment = $meteorObject(Commitments, result[0]._id, false);
+            if(user.commitments){
+              user.commitments.push(commitment._id);
+            } else {
+              user.commitments = [commitment._id];
+            }
+            user.save();
+            defer.resolve(commitment);
+          }, function(error){
+            console.log(error);
             defer.reject(error);
           });
         }else{  // if not logged in, don't push to mongo
           defer.resolve(commitment);
         } 
+
       }
 
       return defer.promise;
@@ -173,142 +149,71 @@
 
     // set notifications for the commitment
     function setNotifications(options){
-      var defer = $q.defer();
-      if(options && !(options.alerts && options.alerts.enabled && !commitment.stakes)){
-        if(commitment._id){
-          subscribeToCommitments('my_commitments').then(function(){
-            Commitments.update({_id: commitment._id}, {$set: {
-              notifications: options
-            }}, function(err, docs){
-              if(err){
-                defer.reject(err);
-              } else {
-                commitment.notifications = options;
-                defer.resolve(docs);
-              }
-            });
-          }, function(error){
-            defer.reject(error);
+      var d = $q.defer();
+
+      if(commitment._id){
+        var prepNotifications = function(values, type){
+          return _.map(values, function(date){
+            return {
+              owner: Meteor.userId(),
+              time: date.time,
+              commitment: commitment._id,
+              type: type,
+              contactType: date.contactType
+            };
           });
-        } else {
-          defer.reject("notifications cannot be stored until commitment is in database");
+        };
+
+        if(options){
+          var notifications = {
+            reminders: prepNotifications(options.reminders, 'reminder'),
+            alerts: prepNotifications(options.alerts, 'alert')
+          };
+
+          $meteorMethods.call('setNotificationsForCommitment', commitment._id, notifications).then(function(docs){
+            d.resolve(docs);
+          },function(error){
+            d.reject(error);
+          });
+        }else{
+          commitment.notifications = null;
+          commitment.save();
+          d.resolve();
         }
-      } else {
-        defer.reject("notification options not properly configured");
+      }else{
+        d.reject('notifications cannot be stored until commitment is in database');
       }
 
-      return defer.promise;
+      return d.promise;
     }
 
     // set stakes for the commitment
     function setStakes(stakes){
-      console.log(stakes);
-
       var defer = $q.defer();
-
       if(stakes && stakes.charity && stakes.charityType && stakes.ammount){
         if(commitment._id){
-          subscribeToCommitments('my_commitments').then(function(){
-            
-            if(!commitment.stakes)  // if the stakes are new (or reset), create a startDate for enforcement
-              stakes.startDate = new Date();
-            
-            Commitments.update({_id: commitment._id}, {$set: {
-              stakes: stakes
-            }}, function(err, docs){
-              if(err){
-                defer.reject(err);
-              }else{
-                commitment.stakes = stakes;
-                console.log(commitment.stakes);
-                defer.resolve(docs);
-              }
-            });
-          }, function(error){
-            defer.reject(error);
-          });
+          stakes.startDate = new Date();  // create a startDate for enforcement
+          commitment.stakes = stakes;
+          commitment.save();
+          defer.resolve();
         } else {
           defer.reject("stakes cannot be stored until commitment is in database");
         }
       }else{
         defer.reject("stakes not properly configured");
       }
-
       return defer.promise;
-    }
-
-    // subscribe user to commitments for a given commitmentChannel
-    // toggle multi to subscribe to multiple channels or stop all channels and replace with commitmentChannel
-    function subscribeToCommitments(){
-      var args = Array.prototype.slice.call(arguments);
-      
-      if(args.length===1){
-        args.unshift(false);
-      }
-
-      args.unshift('commitments');
-
-      return subscriptionService.subscribe.apply(this, args);
     }
 
     // switch the current commitment object
     function switchCommitment(commitmentId){
       var defer = $q.defer;
       if(Meteor.userId()){
-        Commitments.findOne({_id: commitmentId}, function(error, response){
-          if(error){
-            defer.reject(error);
-          }else{
-            commitment = response;
-            defer.resolve(response);
-          }
-        });
+        commitment = $meteorObject(Commitments, commitmentId, false);
+        defer.resolve();
       }else{
         defer.reject("user must be logged in to switch commitments");
       }
-
-      return defer.promise;
-    }
-
-    // upload new commitment to mongo
-    // save to user's commitments
-    // modify the commitment object to include mongo _id
-    function uploadCommitment() {
-      var defer = $q.defer();
-
-      if(Meteor.userId()){
-        if(commitment && commitment.activity && commitment.frequency && commitment.duration){
-          subscribeToCommitments('my_commitments').then(function(){
-            Commitments.insert({
-              owner: Meteor.userId(),
-              activity: commitment.activity,
-              frequency: commitment.frequency,
-              duration: commitment.duration
-            }, function(error, response){
-              if(error){
-                defer.reject(error);
-              }else{
-                Meteor.users.update({_id: Meteor.userId()}, {$push: {commitments: response}}, function(error, docs){
-                  if(error){
-                    defer.reject(error);
-                  }else{
-                    commitment._id = response;  // save the mongo _id of the commitment to the service variable
-                    defer.resolve(response); // return the _id of the commitment
-                  }
-                });
-              }
-            });
-          },
-          function(error){
-            defer.reject(error);
-          });
-        }else{
-          defer.reject("no commitment in cache");
-        }
-      }else{
-        defer.reject("user must be logged in to create commitment");
-      }
-
       return defer.promise;
     }
   }

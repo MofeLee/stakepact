@@ -1,9 +1,9 @@
 (function(){
   angular.module('app').service('authService', authService);
 
-  authService.$inject = ['$rootScope', '$q'];
+  authService.$inject = ['$rootScope', '$q', '$meteorObject', '$meteorSubscribe'];
 
-  function authService($rootScope, $q){
+  function authService($rootScope, $q, $meteorObject, $meteorSubscribe){
     var vm = this;
     var currentId;
 
@@ -14,7 +14,7 @@
         if(!loggingIn){
           if($rootScope.currentUser){
             if(roles){
-              if($rootScope.currentUser.roles && _.intersection($rootScope.currentUser.roles, roles).length > 0)
+              if($rootScope.currentUser.roles && $rootScope.currentUser.roles.__global_roles__ && _.intersection($rootScope.currentUser.roles.__global_roles__, roles).length > 0)
               {
                 defer.resolve($rootScope.currentUser);
               }else{

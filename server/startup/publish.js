@@ -1,10 +1,10 @@
 //////////// users
 
-// server: publish the phone for this user
+// server: publish the phone, timezone, and commitments for this user
 Meteor.publish("my_data", function () {
   if (this.userId) {
     return Meteor.users.find({_id: this.userId},
-    {fields: {'phone': 1}});
+    {fields: {'phone': 1, 'timezone': 1, 'commitments': 1}});
   } else {
     this.ready();
   }
@@ -49,7 +49,28 @@ Meteor.publish("commitments", function(channel_name) {
   var channel = {};
   
   if(Roles.userIsInRole(this.userId, ['manage-users','admin'])){
-    return Charities.find(channel);
+    return Commitments.find(channel);
+  }else{
+    this.ready();
+  }
+});
+
+
+//////////// notifications
+
+// server: publish the notifications created by the user
+Meteor.publish("my_notifications", function(commitment) {
+  var criteria = {owner: this.userId};
+  criteria.commitment = commitment;
+  return Notifications.find(criteria);
+});
+
+// server: publish all the commitments for admin only
+Meteor.publish("notifications", function(channel_name) {
+  var channel = {};
+  
+  if(Roles.userIsInRole(this.userId, ['manage-users','admin'])){
+    return Notifications.find(channel);
   }else{
     this.ready();
   }

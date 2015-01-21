@@ -2,11 +2,18 @@
   'use strict';
 
   angular.module('app').controller('CommitCtrl', CommitCtrl);
-
+  
   CommitCtrl.$inject = ['$log', '$scope', '$timeout', '$state', 'commitService'];
 
   function CommitCtrl($log, $scope, $timeout, $state, commitService){
+    $scope.foo = function (){
+      console.log('tranit ended!');
+    };
     
+    $scope.$on('transit:foo:end', function(e) {
+      console.log('foo ended!');
+    });
+
     var vm = this;
     vm.activate = activate;
     vm.activity = null;
@@ -26,6 +33,10 @@
 
     function activate(){
       loadCommitment();
+      timer = $timeout(function(){
+          /* run code*/
+          $scope.fadeOut=true;
+      }, 1000);
     }
     
     function loadCommitment(){
@@ -47,7 +58,7 @@
     function submit() {
       if($scope.commitForm.$valid && vm.frequency) {
         // save the data to the collection with an anonymous user status ~> convert to real user and tag on data
-        commitService.setCommitment(vm.activity, vm.frequency, vm.duration).then(
+        commitService.setCommitmentBasics(vm.activity, vm.frequency, vm.duration).then(
           function(response){
             if(Meteor.user()){
               $state.go('create.stakes');

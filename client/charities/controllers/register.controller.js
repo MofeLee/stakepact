@@ -1,9 +1,9 @@
 (function() {
   angular.module('app').controller('RegisterCtrl', RegisterCtrl);
 
-  RegisterCtrl.$inject = ['$log', '$state', '$scope', '$subscribe', '$collection', 'utilityService', 'authService', 'subscriptionService'];
+  RegisterCtrl.$inject = ['$log', '$state', '$scope', '$meteorCollection', 'utilityService', 'authService', 'subscriptionService'];
 
-  function RegisterCtrl($log, $state, $scope, $subscribe, $collection, utilityService, authService, subscriptionService) {
+  function RegisterCtrl($log, $state, $scope, $meteorCollection, utilityService, authService, subscriptionService) {
     var vm = this;
     vm.activate = activate;
     vm.isValidEIN = isValidEIN;
@@ -24,10 +24,7 @@
       $scope.$on('loggingIn', function(loggingIn){
         authService.getLoginStatus().then(
           function(user){
-            subscriptionService.subscribe('users', false, 'my_data');
-            subscriptionService.subscribe("charities", true, "my_charities").then(function(){
-              $collection(Charities).bind($scope, 'charities', false, true);
-            });
+            $scope.charities = $meteorCollection(Charities, false).subscribe("my_charities");
           },
           function(error){
             $state.go('create.signup', {'redirect_uri' : $state.current.url});

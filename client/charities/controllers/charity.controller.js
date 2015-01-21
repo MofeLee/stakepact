@@ -1,9 +1,9 @@
 (function() {
   angular.module('app').controller('CharityCtrl', CharityCtrl);
 
-  CharityCtrl.$inject = ['$window', '$state', '$stateParams', '$collection', '$scope', 'angularLoad', 'wepayClientId', 'charity', 'authService'];
+  CharityCtrl.$inject = ['$window', '$state', '$stateParams', '$meteorObject', '$scope', 'angularLoad', 'wepayClientId', 'charity', 'authService'];
 
-  function CharityCtrl($window, $state, $stateParams, $collection, $scope, angularLoad, wepayClientId, charity, authService) {
+  function CharityCtrl($window, $state, $stateParams, $meteorObject, $scope, angularLoad, wepayClientId, charity, authService) {
     var vm = this;
     vm.activate = activate;
     vm.buttonTriggered = false;
@@ -28,7 +28,7 @@
         );
       });
 
-      $collection(Charities).bindOne($scope, 'charity', $stateParams.charityId, false, true);
+      $scope.charity = $meteorObject(Charities, $stateParams.charityId, false);
 
       // watch for changes to charity
       // if no wepay account, set the wepay oauth2 button when the charity loads

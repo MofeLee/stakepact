@@ -3,9 +3,9 @@
 
   angular.module('app').controller('StakesCtrl', StakesCtrl);
 
-  StakesCtrl.$inject = ['$q','$scope', '$collection', '$state', 'authService', 'commitService', 'scriptLoaderService', 'subscriptionService', 'utilityService', 'commitment', 'stakes', 'wepayClientId'];
+  StakesCtrl.$inject = ['$q','$scope', '$meteorCollection', '$meteorSubscribe', '$state', 'authService', 'commitService', 'scriptLoaderService', 'utilityService', 'commitment', 'stakes', 'wepayClientId'];
 
-  function StakesCtrl($q, $scope, $collection, $state, authService, commitService, scriptLoaderService, subscriptionService, utilityService, commitment, stakes, wepayClientId){
+  function StakesCtrl($q, $scope, $meteorCollection, $meteorSubscribe, $state, authService, commitService, scriptLoaderService, utilityService, commitment, stakes, wepayClientId){
     var vm = this;
     vm.activate = activate;
     vm.clearStakes = clearStakes;
@@ -13,6 +13,7 @@
     vm.isCompleteStakesInfo = isCompleteStakesInfo;
     vm.isCompleteCreditCardInfo = isCompleteCreditCardInfo;
     vm.isValidAmmount = isValidAmmount;
+    vm.search = "";
     vm.selectCharity = selectCharity;
     vm.stakes = stakes? stakes:{};
     vm.submit = submit;
@@ -24,15 +25,13 @@
         vm.hasCreditCardId = res;
       });
 
-      subscriptionService.subscribe("charities", true, "charities", "verified").then(function(){
-        $collection(Charities).bind($scope, 'charities', false, false);
-        
-        // if stakes resolves with a charity, bind $scope.selectedCharity
-        if(vm.stakes && vm.stakes.charity) {
-          vm.showStakes = true;
-          $collection(Charities).bindOne($scope, 'selectedCharity', vm.stakes.charity, false, false);
-        }
-      });
+      $scope.charities = $meteorCollection(Charities, false).subscribe('charities', 'verified');
+
+      if(vm.stakes && vm.stakes.charity){
+        vm.showStakes = true;
+        $scope.selectedCharity = _.findWhere($scope.charities, {_id: vm.stakes.charity});
+        console.log($scope.selectedCharity);
+      }
 
       $scope.$on('loggingIn', function(loggedIn){
         authService.getLoginStatus().then(
@@ -167,8 +166,3 @@
     }
   }
 })();
-
-// If ever you get a huge mammoth list of charities, maybe better to go the search route rather than load everything
-// function searchCharities(q) {
-//   $collection(Charities, {name: {$regex : ".*"+q+".*"}}).bind($scope, 'searchResults', false, false);
-// }

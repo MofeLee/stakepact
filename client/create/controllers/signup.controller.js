@@ -3,9 +3,9 @@
 
   angular.module('app').controller('SignupCtrl', SignupCtrl);
 
-  SignupCtrl.$inject = ['$log', '$scope', '$location', '$state', '$stateParams', 'commitService', 'authService', 'subscriptionService'];
+  SignupCtrl.$inject = ['$rootScope', '$log', '$scope', '$location', '$state', '$stateParams', 'commitService', 'authService', 'subscriptionService'];
 
-  function SignupCtrl($log, $scope, $location, $state, $stateParams, commitService, authService, subscriptionService){
+  function SignupCtrl($rootScope, $log, $scope, $location, $state, $stateParams, commitService, authService, subscriptionService){
     var vm = this;
     vm.activate = activate;
     vm.loginWithFacebook = loginWithFacebook;
@@ -18,11 +18,11 @@
 
       // reroute user on login/signup
       $scope.$on('loggingIn', function(){
-        authService.getLoginStatus().then(
-        function(){
+        authService.getLoginStatus().then(function(){
           var commitment = commitService.getCommitment();
-          if($stateParams.create_commitment && commitment && !commitment._id){  // upload commitment if parm is passed and commitment isn't in mongo 
-            commitService.uploadCommitment().then(function(){
+          if($stateParams.create_commitment && commitment && !commitment._id){  // upload commitment if param is passed and commitment isn't in mongo 
+            commitService.setCommitment(commitment.activity, commitment.frequency, commitment.duration).then(function(){
+              console.log(commitService.getCommitment());
               proceed();
             }, function(error){
               console.log(error);
@@ -45,6 +45,8 @@
       }, function(error) {
         if(error) {
           console.log(error);
+        }else{
+          Meteor.users.update({_id: Meteor.userId()}, {$set: {timezone: jstz.determine().name()}}); // save the timezone for the user
         }
       });
     }
@@ -68,7 +70,8 @@
           password: vm.password,
           profile: {
             name: vm.name
-          } 
+          },
+          timezone: jstz.determine().name()
         }, function(error){
           if(error) {
             console.log(error);

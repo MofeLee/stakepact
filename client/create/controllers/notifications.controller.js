@@ -3,16 +3,15 @@
 
   angular.module('app').controller('NotificationsCtrl', NotificationsCtrl);
 
-  NotificationsCtrl.$inject = ['$collection', '$scope', '$state', 'commitment', 'stakes', 'notifications', 'authService', 'commitService', 'subscriptionService', 'utilityService'];
+  NotificationsCtrl.$inject = ['$meteorSubscribe', '$meteorCollection', '$meteorObject', '$q', '$scope', '$state', 'commitment', 'stakes', 'notifications', 'authService', 'commitService', 'utilityService'];
 
-  function NotificationsCtrl($collection, $scope, $state, commitment, stakes, notifications, authService, commitService, subscriptionService, utilityService){
+  function NotificationsCtrl($meteorSubscribe, $meteorCollection, $meteorObject, $q, $scope, $state, commitment, stakes, notifications, authService, commitService, utilityService){
     var vm = this;
     
     vm.commitment = commitment;
     vm.contactTypes = ["text", "email"];
     vm.days = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
     vm.frequencies = ["daily", "weekly"];
-    console.log(stakes);
     vm.stakes = stakes;
     vm.notifications = notifications;
 
@@ -29,15 +28,10 @@
 
     // create default notification settings if no pre-existing settings
     function activate(){
-      subscriptionService.subscribe('users', false, 'my_data').then(function(){
-        vm.phoneNumber = Meteor.user().phone;
-      });
+      vm.phoneNumber = Meteor.user().phone;
 
       if(vm.stakes && vm.stakes.charity) {
-        subscriptionService.subscribe("charities", true, "charities", "verified").then(function(){
-          $collection(Charities).bindOne($scope, 'selectedCharity', vm.stakes.charity, false, false);
-          console.log($scope.selectedCharity);
-        });
+        $scope.selectedCharity = $meteorObject(Charities, vm.stakes.charity, false).subscribe('charities', 'verified');
       }
 
       // reroute user to signup if logout mid session
@@ -54,13 +48,14 @@
 
       if(!vm.notifications){
         vm.reminders = setDefaultSettings();
-        vm.reminders.times[0].enabled = true; // enable monday
-
         vm.alerts = setDefaultSettings();
-        vm.alerts.times[0].enabled = true;  // enable monday
       } else {
-        vm.reminders = prepNotificationForUI(vm.notifications.reminders);
-        vm.alerts = prepNotificationForUI(vm.notifications.alerts);
+        prepNotificationForUI(vm.notifications.reminders).then(function(result){
+          vm.reminders = result;
+        });
+        prepNotificationForUI(vm.notifications.alerts).then(function(result){
+          vm.alerts = result;
+        });
       }
     }
 
@@ -69,59 +64,74 @@
     }
 
     function prepNotificationForUI(passed){
+      var defer = $q.defer();
+
       var defaultReminderSettings = setDefaultSettings();
-      var context = {
-        contactType: passed.contactType,
-        frequency: passed.frequency,
-        times: defaultReminderSettings.times,
-        hour: defaultReminderSettings.hour,
-        am: defaultReminderSettings.am,
-        enabled: passed.enabled
-      };
-      if(passed.times){
-        context.hour = (passed.times[0].hour < 12)? passed.times[0].hour: passed.times[0].hour - 12;
-        _.each(passed.times, function(obj){
-          context.times[obj.day].enabled = true;
-        });
-        context.am = passed.times[0].hour <= 12;
-      }
-      return context;
+
+      $meteorSubscribe.subscribe('my_notifications', commitment._id).then(function(subscriptionHandle){
+        notifications = $meteorCollection(function(){
+          return Notifications.find({_id: {$in: passed}});
+        }, false);
+
+        var context = {};
+        if(notifications.length > 0){
+          context.contactType = notifications[0].contactType;
+          context.frequency = (notifications.length === 7)? 'daily': 'weekly';
+          context.enabled = true;
+          var hours = moment(notifications[0].time).diff(moment.utc(0), 'hours');
+          context.am = hours < 12;
+          context.hours = hours % 12;
+
+          context.times = [];
+          for(var i = 0; i<7; i++){
+            context.times[i] = {
+              enabled: false,
+              hour: context.hours,
+              minute: 0,
+              am: context.am
+            };
+          }
+
+
+          _.each(notifications, function(obj){
+            var i = moment.utc(obj.time).diff(moment.utc(0), 'days');
+            var time = context.times[i];
+            time.enabled = true;
+          });
+        }else{
+          context = setDefaultSettings();
+        }
+
+        defer.resolve(context);
+      });
+
+      return defer.promise;
     }
 
     // modify context values to match mongo object definitions
     function prepNotificationForMongo(context){
-      var result = {};
-
-      result.enabled = context.enabled;
-      result.frequency = context.frequency;
-      result.contactType = context.contactType;
-
-      if(context.frequency === 'daily'){
+      if(context.enabled){
+        // update the model ~ a more sophisticated model should do this in a watch function
         _.each(context.times, function(obj){
-          obj.enabled = true;
+          obj.hour = context.hour;
+          obj.minute = 0;
+          obj.am = context.am;
         });
+
+        // translate to a notification object to be consumed by mongo
+        var result = [];
+        _.each(context.times, function(obj, index){
+          if(obj.enabled){
+            result.push({
+              time: moment.utc(0).add(index, 'days').add(parseInt(obj.hour) + (obj.am? 0 : 12), 'hours').toISOString(),
+              contactType: context.contactType
+            });
+          }
+        });
+        return result;
+      } else {
+        return null;
       }
-
-      // update the model ~ a more sophisticated model should do this in a watch function
-      _.each(context.times, function(obj){
-        obj.hour = context.hour;
-        obj.minute = 0;
-        obj.am = context.am;
-      });
-
-      // translate to a notification object to be consumed by mongo
-      result.times = [];
-      _.each(context.times, function(obj, index){
-        if(obj.enabled){
-          result.times.push({
-            hour: parseInt(obj.hour) + (obj.am? 0 : 12),
-            minute: 0,
-            day: index
-          });
-        }
-      });
-
-      return result;
     }
 
     // set default notification settings
@@ -135,6 +145,7 @@
           am: true
         };
       }
+      defaultTimes[0].enabled = true; // enable monday
       
       return { 
         contactType: 'email', 
@@ -148,20 +159,18 @@
 
     // submit the notification settings
     function submit(){
-      var settings = {};
-
-      // prep the settings for mongo entry
-      settings.reminders = prepNotificationForMongo(vm.reminders);
-      settings.alerts = prepNotificationForMongo(vm.alerts);
-      settings.timezone = jstz.determine().name();  // set the timezone for the alerts according to the browser
-
       // text notifications require a phone number
-      if(((settings.reminders.contactType == 'text' && settings.reminders.enabled) || 
-        (settings.alerts.contactType == 'text' && settings.alerts.enabled)) && !vm.phoneNumber){
+      if(((vm.reminders.contactType == 'text' && vm.reminders.enabled) || (vm.alerts.contactType == 'text' && vm.alerts.enabled)) && (!vm.phoneNumber || !isValidPhoneNumber(vm.phoneNumber))){
         console.log("text notifications require a phone number");
         return;
       }
 
+      // prep the settings for mongo entry
+      var settings = {};
+
+      settings.reminders = prepNotificationForMongo(vm.reminders);
+      settings.alerts = prepNotificationForMongo(vm.alerts);
+      
       // set the user's current phone number to the entry
       if(vm.phoneNumber && isValidPhoneNumber(vm.phoneNumber)){
         Meteor.users.update({_id: Meteor.userId()}, {$set: {phone: vm.phoneNumber}}, function(err, docs){
@@ -174,7 +183,6 @@
       }
 
       // set the notifications for the commitment, then redirect to the dashboard
-      console.log(settings);
       commitService.setNotifications(settings).then(function(){
         $state.go('dashboard');
       }, function(err){
