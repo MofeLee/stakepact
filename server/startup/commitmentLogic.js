@@ -1,11 +1,6 @@
 // after updating a commitment
 // automatically insert/remove/update associated transactions
-// automatically insert/remove/update associated notifications
 Commitments.after.update(function (userId, doc, fieldNames, modifier, options) {
-  // update notification objects if notifications were altered
-  if(_.contains(fieldNames, 'notifications')){
-    updateNotifications(this.previous, doc);
-  }
 
   // if stakes are removed, remove all pending transactions
   // if stakes are modified, pending transactions don't store any stakes data so no changes
@@ -57,66 +52,4 @@ function updatePendingTransactions(doc){
       reportingPeriod: {$in: removableTransactions}
     });
   }
-}
-
-function updateNotifications(commitmentBefore, commitmentAfter){
-
-  //  remove any newly disabled notifications
-  var removeDisabledNotifications = function(type){
-    // check if notifications existed and were enabled for the commitment
-    if(commitmentBefore.notifications && commitmentBefore.notifications[type] && commitmentBefore.notifications[type].enabled && commitmentBefore.notifications[type].times){
-      
-      var daysAfter;  // create an array of the active notification days in the new commitment
-      
-      if(commitmentAfter.notifications[type] && commitmentAfter.notifications[type].enabled && commitmentAfter.notifications[type].times){
-        daysAfter = _.pluck(commitmentAfter.notifications[type].times, 'day');
-      }else{
-        daysAfter  = [];  // if notifications are disabled or don't exist
-      }
-
-      var notificationsToRemove = _.filter(commitmentBefore.notifications[type].times, function(time){
-        return !_.contains(daysAfter, time.day);
-      });
-
-      console.log('removing notifications');
-      console.log(notificationsToRemove);
-
-      if(notificationsToRemove.length){
-        Notifications.remove({_id: {$in: _.pluck(notificationsToRemove, 'notification_id')}});
-      }
-
-    }
-  };
-
-  //  insert and update notifications
-  var insertAndUpdateNotifications = function(type){
-    if(commitmentAfter.notifications[type] && commitmentAfter.notifications[type].enabled && commitmentAfter.notifications[type].times){ 
-      
-      var offset = moment.tz(commitmentAfter.timezone)._offset;  // get the offset from gmt from the user's timezone
-
-      _.each(commitmentAfter.notifications[type].times, function(time){
-        newTime = moment.utc(0).add(time.day, 'days').add(time.hour, 'hours').add(time.minute + offset, 'minutes').toDate();  // utc time + timezone offset, so the notification is sent on time!
-
-        if(time.notification_id){
-          Notifications.update({_id: time.notification_id}, {$set: {time: newTime}});
-        } else {
-          Notifications.insert({commitment: commitmentAfter._id, time: newTime, type: 'reminder'}, function(error, id){
-            if(error){
-
-            }else{
-              
-            }
-          });
-        }
-
-      });
-
-    }
-  };
-
-  removeDisabledNotifications('reminders');
-  removeDisabledNotifications('alerts');
-
-  insertAndUpdateNotifications('reminders');
-  insertAndUpdateNotifications('alerts');
 }

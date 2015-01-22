@@ -44,7 +44,7 @@
 <br>
 <br>
 
-<div class="row text-uppercase text-left" ng-show="notificationsctrl.stakes">
+<div class="row text-uppercase text-left">
   <h3 class="col-xs-offset-2 text-left primary-text">alerts</h3>
   <div class="row">
     <div class="col-xs-offset-2 col-xs-8 secondary-text">

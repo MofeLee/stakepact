@@ -21,8 +21,7 @@
         authService.getLoginStatus().then(function(){
           var commitment = commitService.getCommitment();
           if($stateParams.create_commitment && commitment && !commitment._id){  // upload commitment if param is passed and commitment isn't in mongo 
-            commitService.setCommitment(commitment.activity, commitment.frequency, commitment.duration).then(function(){
-              console.log(commitService.getCommitment());
+            commitService.setCommitmentBasics(commitment.activity, commitment.frequency, commitment.duration).then(function(){
               proceed();
             }, function(error){
               console.log(error);

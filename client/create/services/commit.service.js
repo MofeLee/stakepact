@@ -148,43 +148,21 @@
     }
 
     // set notifications for the commitment
-    function setNotifications(options){
+    function setNotifications(notifications){
       var d = $q.defer();
 
       if(commitment._id){
-        var prepNotifications = function(values, type){
-          return _.map(values, function(date){
-            return {
-              owner: Meteor.userId(),
-              time: date.time,
-              commitment: commitment._id,
-              type: type,
-              contactType: date.contactType
-            };
-          });
-        };
-
-        if(options){
-          var notifications = {
-            reminders: prepNotifications(options.reminders, 'reminder'),
-            alerts: prepNotifications(options.alerts, 'alert')
-          };
-
-          $meteorMethods.call('setNotificationsForCommitment', commitment._id, notifications).then(function(docs){
-            d.resolve(docs);
-          },function(error){
-            d.reject(error);
-          });
-        }else{
+        if(notifications){
+          commitment.notifications = notifications;
+          return commitment.save();
+        } else {
           commitment.notifications = null;
-          commitment.save();
-          d.resolve();
+          return commitment.save();
         }
       }else{
         d.reject('notifications cannot be stored until commitment is in database');
+        return d.promise;
       }
-
-      return d.promise;
     }
 
     // set stakes for the commitment

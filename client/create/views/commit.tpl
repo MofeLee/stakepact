@@ -2,9 +2,9 @@
   <div class="col-xs-12">
     <form name="commitForm" class="text-uppercase text-center" ng-submit="commitctrl.submit()" novalidate>
       <div class="row">
-        <h2 class="col-xs-12 text-center secondary-text" transit=" { $name: 'foo', left: '200px', $end: 'foo()' }">starting today,</h2>
-        <h1 class="col-xs-12 text-center primary-text">i vow to</h1>
-        <input name="activity" class="col-xs-12 text-uppercase text-center no-outline primary-text" type="text" placeholder="exercise" ng-model="tempActivity" ng-change="commitctrl.updateActivity()" required>
+        <h2 class="col-xs-12 text-center secondary-text transparent" transit="{startingTodayTransit: {$name: 'startingTodayTransit', opacity: '1'}}">starting today,</h2>
+        <h1 class="col-xs-12 text-center primary-text transparent" transit="{vowTransit: {$name: 'vowTransit', opacity: '1'}}">i vow to</h1>
+        <input name="activity" class="col-xs-12 text-uppercase text-center no-outline primary-text transparent" type="text" placeholder="exercise" ng-model="tempActivity" ng-change="commitctrl.updateActivity()" transit="{activityTransit: {$name: 'activityTransit', opacity: '1'}, activityTransit2: {$name: 'activityTransit2', left: '200px'}}" required>
       </div>
       <div class="row">
         <div class="col-xs-offset-4 col-xs-4 text-center">
@@ -36,3 +36,4 @@
   </div>
 </div>
 <br>
+{{poop}}

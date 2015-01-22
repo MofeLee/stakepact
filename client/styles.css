@@ -147,3 +147,7 @@ body {
 .today-selected:focus, .today-selected:hover {
   color: #0DC700;
 }
+
+.transparent {
+  opacity: 0
+}

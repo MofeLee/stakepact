@@ -38,27 +38,24 @@ SyncedCron.add({
 });
 
 // // start the cron job
-// SyncedCron.start();
+SyncedCron.start();
 
 
 // send reminders to all users who set notifications for this minute (adjusted for timezone)
 function sendReminders(now, lookupTime){
-  // get all the reminders with the lookupTime signature
-  var reminders = Notifications.find({
-    'time': lookupTime,
-    'type': 'reminder'
+  // get all the commitments with a reminder scheduled for lookupTime
+  var commitments = Commitments.find({
+    'notifications.reminders.time' : lookupTime
   }).fetch();
 
   // send reminders via email or text to users if they haven't checked in yet today
   // find each commitment and send an email or text with the latest information
-  _.each(reminders, function(reminder){
-
-    var commitment = Commitments.findOne({_id: reminder.commitment});
+  _.each(commitments, function(commitment){
  
     // if the user hasn't checked in yet, send the reminder 
     // get the checkin status given the current day according to the user's time zone
     if(!_.contains(commitment.checkins, now.tz(commitment.timezone).format('YYYY-MM-DD'))){
-      if(reminder.contactType === 'email'){ // send a reminder email
+      if(_.findWhere(commitment.notifications.reminders, {time: lookupTime}).contactType === 'email'){ // send a reminder email
         sendNotificationEmail({commitment: commitment}, 'reminder', function(error, info){
           if(error){
             console.log(error);
@@ -75,20 +72,14 @@ function sendReminders(now, lookupTime){
 
 // send alerts to all users who set notifications for this minute (adjusted for timezone)
 function sendAlerts(now, lookupTime){
-  // get all the alerts with the lookupTime signature
-  var alerts = Notifications.find({
-    'time': lookupTime,
-    'type': 'alert'
+  // get all the commitments with a reminder scheduled for lookupTime
+  var commitments = Commitments.find({
+    'notifications.alerts.time' : lookupTime
   }).fetch();
 
   // send alerts via email or text to users if they are going to fail the week or have pending transactions
   // find each commitment and send an email or text with the latest information
-  _.each(alerts, function(alert){
-
-    var commitment = Commitments.findOne({_id: alert.commitment});
-
-    console.log(now.tz(commitment.timezone).format('YYYY-MM-DD'));  
-
+  _.each(commitments, function(commitment){
     var data = {commitment: commitment};
 
     var dividedWeeks = Meteor.call('getSuccessReport', commitment._id, 1); // check the most recent reporting period
@@ -97,8 +88,9 @@ function sendAlerts(now, lookupTime){
 
     // find the pending transactions for the commitment
     var pendingTransactions = Transactions.find({commitment: commitment._id, pending: true}).fetch();
-    if(pendingTransactions){
-      data.charity = Charities.findOne({_id: commitment.stakes.charity});
+    console.log(pendingTransactions);
+    if(pendingTransactions.length){
+      data.charity = Charities.findOne({_id: commitment.stakes.charity}, {fields: {name: 1}});
       data.transactions = pendingTransactions;
     }
 
@@ -111,7 +103,7 @@ function sendAlerts(now, lookupTime){
     // if the user is going to fail the week or has pending transactions, send the alert 
     if(failedWeeks.length > 0 || pendingTransactions.length > 0){
 
-      if(alert.contactType === 'email'){ // send a reminder email
+      if(_.findWhere(commitment.notifications.alerts, {time: lookupTime}).contactType === 'email'){ // send an alert email
         sendNotificationEmail(data, 'alert', function(error, info){
           if(error){
             console.log(error);
@@ -164,10 +156,13 @@ function buildReminderEmail(data){
 function buildAlertEmail(data){
   var subject, text;
   if(data.transactions){
-    subject = sprintf('Alert: Pending transaction to %s', data.transaction.charityName);
+    subject = sprintf('Alert: Pending transaction to %s', data.charity.name);
     text = sprintf('Hey %s,\n\nThis is a warning that you have the following pending transactions:', data.owner.profile.name);
-    text += vsprintf('\n$%1$s will be sent to %2$s on %3$s for failing to %4$s %5$s times for the week of %6$s.', 
-      [data.transaction.ammount, data.charity.name, data.transaction.transactionDate, data.commitment.activity, data.commitment.frequency, data.transaction.reportingPeriod]);
+    _.each(data.transactions, function(transaction){
+      text += vsprintf('\n\n$%1$s will be sent to %2$s on %3$s for failing to %4$s %5$s times for the week of %6$s.', 
+      [data.commitment.stakes.ammount, data.charity.name, moment(transaction.transactionDate).format('M/DD/YY'), data.commitment.activity, data.commitment.frequency, moment(transaction.reportingPeriod).format('M/DD/YY')]);
+    });
+    
     text += '\n\nSincerely,\nThe Stakepact Team';
   }else{
     subject = sprintf('Alert: Not on track to %s %s times this week', data.commitment.activity, data.commitment.frequency);
@@ -181,3 +176,16 @@ function buildAlertEmail(data){
     // html: '<b>Do it!</b>' // html body
   };
 }
+
+
+// // this was used to test if reminder emails were working -- you could eventually convert to jasmine tests and such
+// var now = moment().utc();
+// var inAMinute = moment.utc(0).add(now.day(), 'days').add(now.hour(), 'hours').add(now.minute() + 1, 'minutes').toISOString();
+// console.log(Commitments.update({_id: 'S3v3ASipXepF2fhof'}, {$set: {'notifications.alerts.0.time': inAMinute}}));
+// console.log(Commitments.find({'notifications.alerts.time': inAMinute}).fetch());
+// Transactions.insert({
+//   commitment: 'S3v3ASipXepF2fhof',
+//   pending: true,
+//   reportingPeriod: '2014-05-16',
+//   transactionDate: moment().add(5, 'days').toISOString()
+// });

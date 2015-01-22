@@ -6,12 +6,20 @@
   CommitCtrl.$inject = ['$log', '$scope', '$timeout', '$state', 'commitService'];
 
   function CommitCtrl($log, $scope, $timeout, $state, commitService){
-    $scope.foo = function (){
-      console.log('tranit ended!');
-    };
-    
-    $scope.$on('transit:foo:end', function(e) {
-      console.log('foo ended!');
+
+    $scope.$on('transit:startingTodayTransit:end', function(e) {
+      $scope.vowTransit = true;
+      $scope.$apply();
+    });
+
+    $scope.$on('transit:vowTransit:end', function(e) {
+      $scope.activityTransit = true;
+      $scope.$apply();
+    });
+
+    $scope.$on('transit:activityTransit:end', function(e) {
+      $scope.activityTransit2 = true;
+      $scope.$apply();
     });
 
     var vm = this;
@@ -33,9 +41,11 @@
 
     function activate(){
       loadCommitment();
-      timer = $timeout(function(){
+
+      // start the animation
+      $timeout(function(){
           /* run code*/
-          $scope.fadeOut=true;
+          $scope.startingTodayTransit=true;
       }, 1000);
     }
     

@@ -50,12 +50,8 @@
         vm.reminders = setDefaultSettings();
         vm.alerts = setDefaultSettings();
       } else {
-        prepNotificationForUI(vm.notifications.reminders).then(function(result){
-          vm.reminders = result;
-        });
-        prepNotificationForUI(vm.notifications.alerts).then(function(result){
-          vm.alerts = result;
-        });
+        vm.reminders = prepNotificationForUI(vm.notifications.reminders);
+        vm.alerts = prepNotificationForUI(vm.notifications.alerts);
       }
     }
 
@@ -63,49 +59,40 @@
       return utilityService.isValidPhoneNumber(num);
     }
 
-    function prepNotificationForUI(passed){
-      var defer = $q.defer();
+    // convert mongo data to pretty UI/UX
+    function prepNotificationForUI(notifications){
+      var context = {};
+      if(notifications.length > 0){
 
-      var defaultReminderSettings = setDefaultSettings();
+        context.contactType = notifications[0].contactType; // take the first element's contactType because right now we set all of them at once
+        context.frequency = (notifications.length === 7)? 'daily': 'weekly';
+        context.enabled = true;
+        var hours = moment(notifications[0].time).diff(moment.utc(0), 'hours');
+        context.am = hours < 12;
+        context.hours = hours % 12;
 
-      $meteorSubscribe.subscribe('my_notifications', commitment._id).then(function(subscriptionHandle){
-        notifications = $meteorCollection(function(){
-          return Notifications.find({_id: {$in: passed}});
-        }, false);
-
-        var context = {};
-        if(notifications.length > 0){
-          context.contactType = notifications[0].contactType;
-          context.frequency = (notifications.length === 7)? 'daily': 'weekly';
-          context.enabled = true;
-          var hours = moment(notifications[0].time).diff(moment.utc(0), 'hours');
-          context.am = hours < 12;
-          context.hours = hours % 12;
-
-          context.times = [];
-          for(var i = 0; i<7; i++){
-            context.times[i] = {
-              enabled: false,
-              hour: context.hours,
-              minute: 0,
-              am: context.am
-            };
-          }
-
-
-          _.each(notifications, function(obj){
-            var i = moment.utc(obj.time).diff(moment.utc(0), 'days');
-            var time = context.times[i];
-            time.enabled = true;
-          });
-        }else{
-          context = setDefaultSettings();
+        // set the times for the notifications
+        context.times = [];
+        for(var i = 0; i<7; i++){
+          context.times[i] = {
+            enabled: false,
+            hour: context.hours,
+            minute: 0,
+            am: context.am
+          };
         }
 
-        defer.resolve(context);
-      });
+        // enable all notifications that are stored in mongo
+        _.each(notifications, function(obj){
+          var i = moment.utc(obj.time).diff(moment.utc(0), 'days');
+          var time = context.times[i];
+          time.enabled = true;
+        });
+      }else{
+        context = setDefaultSettings();
+      }
 
-      return defer.promise;
+      return context;
     }
 
     // modify context values to match mongo object definitions

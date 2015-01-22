@@ -62,11 +62,11 @@
                 transitQueue = [],
                 currentTransit;
 
-            elem.bind('transitionend', function (e) {
+            elem.bind('transitionend webkitTransitionEnd oTransitionEnd', function (e) {
                 var cssProps = currentTransit.cssProps,
                     name = currentTransit.name,
                     end = currentTransit.end;
-                remove(cssProps, e.propertyName);
+                remove(cssProps, e.originalEvent.propertyName);
                 if (cssProps.length === 0) {
                     scope.$broadcast('transit:' + name + ':end');
                     if (end) {
