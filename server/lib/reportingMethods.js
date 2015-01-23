@@ -6,6 +6,7 @@ Meteor.methods({
    * @param {Number} weeksBeforeToday number of weeks preceeding today to test (optional)
    */ 
   getSuccessReport: function(commitment, weeksBeforeToday){
+
     var endDate = moment.min(moment().startOf('day'), moment(commitment.createdAt).add(commitment.duration, 'weeks').startOf('day'));  // test up to today or the last active day for expired commitments
 
     var startDate;

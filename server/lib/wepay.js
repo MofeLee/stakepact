@@ -276,7 +276,7 @@ function updateCharityWithWepayAccount(charity, oauthResponse, createResponse, c
 }
 
 // pay a charity for a failed commitment -- server side only
-function createWePayCheckout(commitmentId, reportingPeriod) {
+createWePayCheckout = function(commitmentId, reportingPeriod) {
   if(!reportingPeriod && !commitmentId){
     throw new Meteor.Error('bad-request', 'must include commitmentId and reportingPeriod arguments');
   }
@@ -343,7 +343,7 @@ function createWePayCheckout(commitmentId, reportingPeriod) {
       }
     }
   );
-}
+};
 
 // // creates embedded preapproval -- replaced with credit card tokenizing
 // createWePayPreapproval: function(stakes, commitment) {

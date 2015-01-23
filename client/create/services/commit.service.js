@@ -4,12 +4,14 @@
 
   angular.module('app').factory('commitService', commitService);
 
-  commitService.$inject = ['$q', 'utilityService', '$meteorCollection', '$meteorMethods', '$meteorObject'];
+  commitService.$inject = ['$q', 'utilityService', '$meteorCollection', '$meteorMethods', '$meteorObject', '$meteorSubscribe'];
 
-  function commitService($q, utilityService, $meteorCollection, $meteorMethods, $meteorObject) {
+  function commitService($q, utilityService, $meteorCollection, $meteorMethods, $meteorObject, $meteorSubscribe) {
     
-    var commitment = null;
-    var commitments = $meteorCollection(Commitments, false).subscribe('my_commitments');
+    var commitment, commitments;
+    $meteorSubscribe.subscribe('my_commitments').then(function(subscriptionHandle){
+      commitments = $meteorCollection(Commitments, false).subscribe('my_commitments');
+    }); // there is a delay if you do $meteorCollection.subscribe, so use $meteorSubscribe.then instead
     var frequencies = ["1x weekly", "2x weekly", "3x weekly", "4x weekly", "5x weekly", "6x weekly", "daily"];
 
     var service = {
@@ -23,6 +25,7 @@
       getStakes: getStakes,
       getStakesString: getStakesString,
       setCheckins: setCheckins,
+      setCommitment: setCommitment,
       setCommitmentBasics: setCommitmentBasics,
       setNotifications: setNotifications,
       setStakes: setStakes
@@ -101,6 +104,15 @@
       var currentCommitment = $meteorObject(Commitments, commitmentId, false);
       currentCommitment.dates = dates;
       currentCommitment.save();
+    }
+
+    function setCommitment(id){
+      var defer = $q.defer();
+      commitment = $meteorSubscribe.subscribe('my_commitments').then(function(subscriptionHandle){
+        commitment = $meteorObject(Commitments, id, false);
+        defer.resolve(commitment);
+      });
+      return defer.promise;
     }
 
     // set the commitment object

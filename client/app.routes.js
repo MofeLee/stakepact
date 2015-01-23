@@ -142,10 +142,19 @@ angular.module("app").config(['$urlRouterProvider', '$stateProvider', '$location
         template: '<ui-view/>'
       })
       .state('create.commit', {
-        url: '/commit',
+        url: '/commit?modify',
         templateUrl: 'client/create/views/commit.tpl',
         controller: 'CommitCtrl',
-        controllerAs: 'commitctrl'
+        controllerAs: 'commitctrl',
+        resolve: {
+          commitment: function($stateParams, commitService){
+            if($stateParams.modify){
+              return commitService.setCommitment($stateParams.modify);
+            }else{
+              return commitService.getCommitment();
+            }
+          }
+        }
       })
       .state('create.signup', {
         url: '/signup?redirect_uri&create_commitment',
@@ -166,7 +175,7 @@ angular.module("app").config(['$urlRouterProvider', '$stateProvider', '$location
         }
       })
       .state('create.stakes', {
-        url: '/stakes',
+        url: '/stakes?modify',
         templateUrl: 'client/create/views/stakes.tpl',
         controller: 'StakesCtrl',
         controllerAs: 'stakesctrl',
@@ -174,10 +183,14 @@ angular.module("app").config(['$urlRouterProvider', '$stateProvider', '$location
           isAuthorized: function(authService){
             return authService.getLoginStatus();
           },
-          commitment: function($q, commitService) {
+          commitment: function($q, $stateParams, commitService) {
             var defer = $q.defer();
 
-            var commitment = commitService.getCommitment();
+            var commitment;
+            if($stateParams.modify)
+              return commitService.setCommitment($stateParams.modify);
+            else
+              commitment = commitService.getCommitment();
             
             if(commitment && commitment._id) {
               defer.resolve(commitment);
@@ -187,14 +200,11 @@ angular.module("app").config(['$urlRouterProvider', '$stateProvider', '$location
             }
 
             return defer.promise;
-          },
-          stakes: function($q, commitService) {
-            return commitService.getStakes();
           }
         }
       })
       .state('create.notifications', {
-        url: '/notifications',
+        url: '/notifications?modify',
         templateUrl: 'client/create/views/notifications.tpl',
         controller: 'NotificationsCtrl',
         controllerAs: 'notificationsctrl',
@@ -202,22 +212,23 @@ angular.module("app").config(['$urlRouterProvider', '$stateProvider', '$location
           isAuthorized: function(authService){
             return authService.getLoginStatus();
           },
-          commitment: function($q, commitService) {
+          commitment: function($q, $stateParams, commitService) {
             var defer = $q.defer();
-            var commitment = commitService.getCommitment();
-            if(commitment) {
+
+            var commitment;
+            if($stateParams.modify)
+              return commitService.setCommitment($stateParams.modify);
+            else
+              commitment = commitService.getCommitment();
+            
+            if(commitment && commitment._id) {
               defer.resolve(commitment);
-            } else {
-              defer.reject({status: 400, description: "missing commitment"});
             }
+            else {
+              defer.reject({status: 400, description: "commitment not properly configured"});
+            }
+
             return defer.promise;
-          },
-          stakes: function(commitService){
-            console.log(commitService.getStakes());
-            return commitService.getStakes();
-          },
-          notifications: function(commitService) {
-            return commitService.getNotifications();
           }
         }
       })

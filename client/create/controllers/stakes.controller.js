@@ -3,9 +3,9 @@
 
   angular.module('app').controller('StakesCtrl', StakesCtrl);
 
-  StakesCtrl.$inject = ['$q','$scope', '$meteorCollection', '$meteorSubscribe', '$state', 'authService', 'commitService', 'scriptLoaderService', 'utilityService', 'commitment', 'stakes', 'wepayClientId'];
+  StakesCtrl.$inject = ['$q','$scope', '$meteorCollection', '$meteorSubscribe', '$state', '$stateParams', 'authService', 'commitService', 'scriptLoaderService', 'utilityService', 'commitment', 'wepayClientId'];
 
-  function StakesCtrl($q, $scope, $meteorCollection, $meteorSubscribe, $state, authService, commitService, scriptLoaderService, utilityService, commitment, stakes, wepayClientId){
+  function StakesCtrl($q, $scope, $meteorCollection, $meteorSubscribe, $state, $stateParams, authService, commitService, scriptLoaderService, utilityService, commitment, wepayClientId){
     var vm = this;
     vm.activate = activate;
     vm.clearStakes = clearStakes;
@@ -15,7 +15,8 @@
     vm.isValidAmmount = isValidAmmount;
     vm.search = "";
     vm.selectCharity = selectCharity;
-    vm.stakes = stakes? stakes:{};
+    vm.stakes = commitment.stakes? commitment.stakes:{};
+    console.log(vm.stakes);
     vm.submit = submit;
 
     vm.activate();
@@ -25,13 +26,16 @@
         vm.hasCreditCardId = res;
       });
 
-      $scope.charities = $meteorCollection(Charities, false).subscribe('charities', 'verified');
+      $meteorSubscribe.subscribe('charities', 'verified').then(function(){
+        $scope.charities = $meteorCollection(Charities, false);
 
-      if(vm.stakes && vm.stakes.charity){
-        vm.showStakes = true;
-        $scope.selectedCharity = _.findWhere($scope.charities, {_id: vm.stakes.charity});
-        console.log($scope.selectedCharity);
-      }
+        if(vm.stakes && vm.stakes.charity){
+          vm.showStakes = true;
+          $scope.selectedCharity = _.findWhere($scope.charities, {_id: vm.stakes.charity});
+          vm.acceptConditions = true;
+          vm.cardType = 'existing credit card'; 
+        }
+      });
 
       $scope.$on('loggingIn', function(loggedIn){
         authService.getLoginStatus().then(
@@ -88,15 +92,15 @@
     }
 
     function submit(){
-      console.log("submitted");
+      var nextLocation = $stateParams.modify? 'dashboard': 'create.notifications';
       if(isCompleteStakesInfo() && isCompleteCreditCardInfo()){
         commitService.setStakes({charity: $scope.selectedCharity._id, charityType: vm.stakes.charityType, ammount: vm.stakes.ammount}).then(function(){
           if(vm.hasCreditCardId && vm.cardType === 'existing credit card') {
-            $state.go('create.notifications');
+            $state.go(nextLocation);
           } else {
             submitCreditCard().then(function(docs){
               console.log(docs);
-              $state.go('create.notifications');
+              $state.go(nextLocation);              
             }, function(error){
               console.log(error);
             });

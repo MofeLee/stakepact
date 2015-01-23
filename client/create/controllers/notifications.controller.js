@@ -3,17 +3,17 @@
 
   angular.module('app').controller('NotificationsCtrl', NotificationsCtrl);
 
-  NotificationsCtrl.$inject = ['$meteorSubscribe', '$meteorCollection', '$meteorObject', '$q', '$scope', '$state', 'commitment', 'stakes', 'notifications', 'authService', 'commitService', 'utilityService'];
+  NotificationsCtrl.$inject = ['$meteorSubscribe', '$meteorCollection', '$meteorObject', '$q', '$scope', '$state', '$stateParams', 'commitment', 'authService', 'commitService', 'utilityService'];
 
-  function NotificationsCtrl($meteorSubscribe, $meteorCollection, $meteorObject, $q, $scope, $state, commitment, stakes, notifications, authService, commitService, utilityService){
+  function NotificationsCtrl($meteorSubscribe, $meteorCollection, $meteorObject, $q, $scope, $state, $stateParams, commitment, authService, commitService, utilityService){
     var vm = this;
     
     vm.commitment = commitment;
     vm.contactTypes = ["text", "email"];
     vm.days = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
     vm.frequencies = ["daily", "weekly"];
-    vm.stakes = stakes;
-    vm.notifications = notifications;
+    vm.stakes = commitment.stakes;
+    vm.notifications = commitment.notifications;
 
     vm.activate = activate;
     vm.submit = submit;
@@ -62,7 +62,7 @@
     // convert mongo data to pretty UI/UX
     function prepNotificationForUI(notifications){
       var context = {};
-      if(notifications.length > 0){
+      if(notifications && notifications.length > 0){
 
         context.contactType = notifications[0].contactType; // take the first element's contactType because right now we set all of them at once
         context.frequency = (notifications.length === 7)? 'daily': 'weekly';
@@ -110,7 +110,7 @@
         _.each(context.times, function(obj, index){
           if(obj.enabled){
             result.push({
-              time: moment.utc(0).add(index, 'days').add(parseInt(obj.hour) + (obj.am? 0 : 12), 'hours').toISOString(),
+              time: moment.utc(0).add(index, 'days').add(parseInt(obj.hour) + (obj.am? 0 : 12), 'hours').toDate(),
               contactType: context.contactType
             });
           }

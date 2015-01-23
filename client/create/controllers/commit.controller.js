@@ -3,9 +3,9 @@
 
   angular.module('app').controller('CommitCtrl', CommitCtrl);
   
-  CommitCtrl.$inject = ['$log', '$scope', '$timeout', '$state', 'commitService'];
+  CommitCtrl.$inject = ['$log', '$scope', '$timeout', '$state', '$stateParams', 'commitService', 'commitment'];
 
-  function CommitCtrl($log, $scope, $timeout, $state, commitService){
+  function CommitCtrl($log, $scope, $timeout, $state, $stateParams, commitService, commitment){
 
     $scope.$on('transit:startingTodayTransit:end', function(e) {
       $scope.vowTransit = true;
@@ -25,6 +25,7 @@
     var vm = this;
     vm.activate = activate;
     vm.activity = null;
+    vm.commitment = commitment;
     vm.duration = null;
     vm.frequencies = commitService.frequencies;
     vm.frequency = null;
@@ -50,14 +51,13 @@
     }
     
     function loadCommitment(){
-      var commitment = commitService.getCommitment();
-      if(commitment) {
-        $scope.tempActivity = commitment.activity;
-        vm.activity = commitment.activity;
-        vm.frequency = commitment.frequency;
-        vm.duration = commitment.duration;
+      if(vm.commitment) {
+        $scope.tempActivity = vm.commitment.activity;
+        vm.activity = vm.commitment.activity;
+        vm.frequency = vm.commitment.frequency;
+        vm.duration = vm.commitment.duration;
       }
-      return commitment;
+      return vm.commitment;
     }
 
     function setFrequency(f){
@@ -71,7 +71,10 @@
         commitService.setCommitmentBasics(vm.activity, vm.frequency, vm.duration).then(
           function(response){
             if(Meteor.user()){
-              $state.go('create.stakes');
+              if($stateParams.modify)
+                $state.go('dashboard');
+              else
+                $state.go('create.stakes');
             } else {
               $state.go('create.signup', {create_commitment: true});
             }

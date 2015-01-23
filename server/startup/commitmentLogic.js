@@ -41,7 +41,10 @@ function updatePendingTransactions(doc){
     };
   });
   if(newTransactionObjects.length){
-    Transactions.insert(newTransactionObjects);
+    console.log(newTransactionObjects);
+    _.each(newTransactionObjects, function(transaction){
+      Transactions.insert(transaction);
+    });
   }
 
   // remove transactions for weeks that are no longer failed

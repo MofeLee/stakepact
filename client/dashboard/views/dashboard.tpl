@@ -4,7 +4,19 @@
       <div class="col-xs-12">
         <h1 class="secondary-text" style="font-weight: 700;">
           {{commitment.activity + " " + dashboardctrl.frequencies[commitment.frequency - 1] }}
-          <a ><sup><span class="glyphicon glyphicon-cog"> </span></sup></a>
+          <sup>
+            <span class="dropdown" dropdown on-toggle="toggled(open)">
+              <a href class="glyphicon glyphicon-cog" dropdown-toggle style="text-decoration: none">
+              </a>
+              <ul class="dropdown-menu">
+                <li>
+                  <a ui-sref="create.commit({modify: commitment._id})">Commitment</a>
+                  <a ui-sref="create.stakes({modify: commitment._id})">Stakes</a>
+                  <a ui-sref="create.notifications({modify: commitment._id})">Notifications</a>
+                </li>
+              </ul>
+            </span>
+          </sup>
         </h1>
         <div class="row">
           <h3 class="col-xs-offset-2 col-xs-8 tertiary-text">Every week I don't succeed, I will donate ${{stakes.ammount}} to {{stakes.charityName}}</h3>

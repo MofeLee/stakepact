@@ -1,1 +1,1 @@
-angular.module('app', ['angular-meteor', 'ui.router', 'pickadate', 'angularLoad', 'transit']);
+angular.module('app', ['angular-meteor', 'ui.router', 'pickadate', 'angularLoad', 'transit', 'ui.bootstrap']);

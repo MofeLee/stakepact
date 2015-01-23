@@ -14,7 +14,11 @@
     vm.frequencies = commitService.frequencies;
     vm.todayDateString = moment().format('YYYY-MM-DD');
     vm.toggleToday = toggleToday;
-
+    vm.settings = {
+      commitment: 'create.commit',
+      stakes: 'create.stakes',
+      notifications: 'create.notifications',
+    };
     vm.activate();
 
     ////////////
