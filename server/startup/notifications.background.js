@@ -1,10 +1,3 @@
-// write strings with ease
-var sprintf = Meteor.npmRequire("sprintf-js").sprintf,
-    vsprintf = Meteor.npmRequire("sprintf-js").vsprintf;
-
-// send email via nodemailer
-var nodemailer = Meteor.npmRequire('nodemailer');
-
 // create reusable transporter object using SMTP transport
 var transporter = nodemailer.createTransport({
   service: 'Gmail',
@@ -54,7 +47,10 @@ function sendReminders(now, lookupTime){
     // if the user hasn't checked in yet, send the reminder 
     // get the checkin status given the current day according to the user's time zone
     if(!_.contains(commitment.checkins, now.tz(commitment.timezone).format('YYYY-MM-DD'))){
-      if(_.findWhere(commitment.notifications.reminders, {time: lookupTime}).contactType === 'email'){ // send a reminder email
+      var reminder = _.find(commitment.notifications.reminders, function(reminder){
+        return moment(reminder.time).isSame(lookupTime);
+      });
+      if(reminder.contactType == 'email'){
         sendNotificationEmail({commitment: commitment}, 'reminder', function(error, info){
           if(error){
             console.log(error);
@@ -62,7 +58,7 @@ function sendReminders(now, lookupTime){
             console.log('Message sent: ' + info.response);
           }
         });
-      }else{  // send a reminder text
+      }else{  // send a text
 
       }
     }
@@ -78,6 +74,7 @@ function sendAlerts(now, lookupTime){
 
   // send alerts via email or text to users if they are going to fail the week or have pending transactions
   // find each commitment and send an email or text with the latest information
+  var longExpiredCommitments = [];
   _.each(commitments, function(commitment){
     var data = {commitment: commitment};
 
@@ -89,6 +86,8 @@ function sendAlerts(now, lookupTime){
     if(pendingTransactions.length){
       data.charity = Charities.findOne({_id: commitment.stakes.charity}, {fields: {name: 1}});
       data.transactions = pendingTransactions;
+    } else if(moment(commitment.expiresAt).diff(now, 'days') >= 14){  // long expired commitments with no pending transactions will get notifications batch removed
+      longExpiredCommitments.push(commitment._id);
     }
 
     // verify that the current week isn't on track or it's monday and they failed last week
@@ -109,6 +108,10 @@ function sendAlerts(now, lookupTime){
       }
     }
   });
+  
+  // unset all the old notifications for long expired Commitments
+  // only do this 2 weeks after Commitment expires in case there are pending transactions for the final reporting week
+  Commitments.update({_id: {$in: longExpiredCommitments}}, {$unset: {'notifications.alerts': ''}});
 }
 
 // send a notification email to the given commitment
@@ -118,6 +121,7 @@ function sendNotificationEmail(data, type, callback){
     callback('owner not found', null);
   }
 
+  // get the first email address on file
   if(data.owner.emails && data.owner.emails.length > 0){
     data.email = data.owner.emails[0].address;
   }else if(data.owner.services && data.owner.services.facebook && data.owner.services.facebook.email){
@@ -179,10 +183,11 @@ function buildAlertEmail(data){
 }
 
 
+
 // // this was used to test if alert emails were working -- you could eventually convert to jasmine tests and such
 // var now = moment().utc();
-// var inAMinute = moment.utc(0).add(now.day(), 'days').add(now.hour(), 'hours').add(now.minute() + 1, 'minutes').toISOString();
-// console.log(Commitments.update({_id: 'S3v3ASipXepF2fhof'}, {$set: {'notifications.alerts.0.time': inAMinute}}));
+// var inAMinute = moment.utc(0).add(now.day(), 'days').add(now.hour(), 'hours').add(now.minute() + 1, 'minutes').toDate();
+// console.log(Commitments.update({_id: 'CfRbnypetXQRWJkgp'}, {$set: {'notifications.reminders.0.time': inAMinute}}));
 // console.log(Commitments.find({'notifications.alerts.time': inAMinute}).fetch());
 // Transactions.insert({
 //   commitment: 'S3v3ASipXepF2fhof',

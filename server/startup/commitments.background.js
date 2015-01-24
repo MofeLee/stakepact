@@ -1,6 +1,6 @@
 // create/process pending transactions
 // remove reminders for expired commitments
-// remove alerts for expired commitments with no pending transactions
+// remove alerts for long expired commitments with no pending transactions
 SyncedCron.add({
   name: 'get reports for commitments',
   schedule: function(parser) {
@@ -25,7 +25,6 @@ SyncedCron.add({
 function processReportingCommitments(now, lookupTime){
   // get all the commitments that report daily at this time
   var reportingCommitments = getReportingCommitments(now, lookupTime);
-  console.log('reportingCommitments', reportingCommitments);
 
   // clear reminders for expiring commitments
   clearExpiredReminders(reportingCommitments, now);
@@ -51,12 +50,12 @@ function createPendingTransactions(reportingCommitments, now){
 
     // if the user failed the past week, create a transaction
     if(_.contains(failedWeeks, lastMonday)){
-      console.log('inserting new transaction', Transactions.insert({
+      Transactions.insert({
         commitment: commitment._id,
         reportingPeriod: lastMonday,
         transactionDate: now.clone().add(14, 'days').startOf('minute').toDate(),  // schedule for two weeks from now at the start of the minute
         pending: true
-      }));
+      });
     }
   });
 }
@@ -74,36 +73,46 @@ function clearExpiredReminders(reportingCommitments){
 
 function processPendingTransactions(now){
   var transactions = getPendingTransactions(now);
-  console.log('pendingTransactions to be processed', transactions);
   _.each(transactions, function(transaction){
     commitment = Commitments.findOne({_id: transaction.commitment});
 
     // check everything one last time to verify the transaction should be processed
-    var didFail = _.contains(Meteor.call('getSuccessReport', commitment, 1).failed, transaction.reportingPeriod); // confirm the user failed their commitment this week
+    var didFail = _.contains(Meteor.call('getSuccessReport', commitment).failed, transaction.reportingPeriod); // confirm the user failed their commitment this week
 
     // you're going to get throttled -- you need to collect all of these and make a set of batch calls
     if(didFail && commitment.stakes && commitment.stakes.ammount && commitment.stakes.charity){
-      var checkout = createWePayCheckout(commitment, transaction.reportingPeriod);
-      console.log(checkout);
+      try{
+        var response = createWePayCheckout(commitment._id, transaction.reportingPeriod);
+        if(response.error){
+          Transactions.update({_id: transaction._id}, {$set: {errorDescription: response.error_description, pending: false}});
+        }else{
+          Transactions.update({_id: transaction._id}, {$set: {pending: false, shortDescription: sprintf('$%s %s', response.amount, response.short_description)}});
+        }
+      }catch(e){
+        Transactions.update({_id: transaction._id}, {$set: {errorDescription: e.description, pending: false}});
+      }
     }
   });
 }
 
 function getPendingTransactions(now){
   return Transactions.find({
-    'transactionDate': now.clone().startOf('minute').toDate(), // get all transactions that are pending for this minute
+    'transactionDate': now.startOf('minute').toDate(), // get all transactions that are pending for this minute
     'pending': true
   }).fetch();
 }
 
-// // this was used to test if cron commitment updating was working -- you could eventually convert to jasmine tests and such
+
+
+
+// this was used to test if cron commitment updating was working -- you could eventually convert to jasmine tests and such
 // var now = moment().utc();
 // var inAMinute = moment.utc(0).add(now.day(), 'days').add(now.hour(), 'hours').add(now.minute() + 1, 'minutes').toISOString();
-// console.log(Commitments.update({_id: 'PxhS5oRiRGgjYkSiu'}, {$set: {reportsAt: moment(inAMinute).toDate(), expiresAt: moment().add(5, 'days').toDate(), 'createdAt': moment().subtract(4, 'weeks').toDate(), frequency: 7}}));
+// console.log(Commitments.update({_id: 'CfRbnypetXQRWJkgp'}, {$set: {reportsAt: moment(inAMinute).toDate(), expiresAt: moment().add(5, 'days').toDate(), 'createdAt': moment().subtract(4, 'weeks').toDate(), frequency: 7}}));
 // console.log(Commitments.find({'reportsAt': moment(inAMinute).toDate()}).fetch());
 
 
-// this was used to test if cron transaction execution was working -- you could eventually convert to jasmine tests and such
+// // this was used to test if cron transaction execution was working -- you could eventually convert to jasmine tests and such
 // var now = moment().utc();
-// console.log(Transactions.update({_id: '82EYnHWzSeS85XJoD'}, {$set: {transactionDate: now.add(1, 'minutes').startOf('minute').toDate()}}));
-// console.log(Transactions.find({_id: '82EYnHWzSeS85XJoD'}).fetch());
+// console.log(Transactions.update({_id: 'bhMxDx5N3zzFetenq'}, {$set: {pending: true, transactionDate: now.add(1, 'minutes').startOf('minute').toDate()}}));
+// console.log(Transactions.find({_id: 'bhMxDx5N3zzFetenq'}).fetch());

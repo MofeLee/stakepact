@@ -139,6 +139,8 @@
             }
           };
 
+          console.log(params);
+
           WePay.credit_card.create(params, function(data) {
             if (data.error) {
               defer.reject(data.error);

@@ -17,10 +17,10 @@
       $scope.$apply();
     });
 
-    $scope.$on('transit:activityTransit:end', function(e) {
-      $scope.activityTransit2 = true;
-      $scope.$apply();
-    });
+    // $scope.$on('transit:activityTransit:end', function(e) {
+    //   $scope.activityTransit2 = true;
+    //   $scope.$apply();
+    // });
 
     var vm = this;
     vm.activate = activate;

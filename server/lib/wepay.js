@@ -215,13 +215,10 @@ Meteor.methods({
           }else{
             try{
               response = JSON.parse(String(res));
-              console.log(response);
-              
               // everything worked -- update uri retrieved. give yourself a high-five!
               fut.return(response);
 
             } catch(e) {
-              console.log(e);
               fut.throw(new Meteor.Error('parse-failed'));
             }
           }
@@ -286,7 +283,7 @@ createWePayCheckout = function(commitmentId, reportingPeriod) {
     throw new Meteor.Error('bad-request', 'commitment not found');
   }
 
-  if(!commitment.activity || !commitment.stakes || !commitment.stakes.ammount || !commitment.owner || !commitment.stakes.charityId){
+  if(!commitment.activity || !commitment.stakes || !commitment.stakes.ammount || !commitment.owner || !commitment.stakes.charity){
     throw new Meteor.Error('bad-request', 'commitment not properly configured to create checkout');
   }
     
@@ -299,7 +296,6 @@ createWePayCheckout = function(commitmentId, reportingPeriod) {
     throw new Meteor.Error('bad-request', 'charity not properly configured to receive payments');
   }
 
-
   var user = Meteor.users.findOne({_id: commitment.owner});
   if(!user && user.credit_card_id){
     throw new Meteor.Error('bad-request', 'commitment owner not found in users');
@@ -309,13 +305,13 @@ createWePayCheckout = function(commitmentId, reportingPeriod) {
   var decryptedCreditCardId = OAuthEncryption.isSealed(user.credit_card_id) ? OAuthEncryption.open(user.credit_card_id) : user.credit_card_id;
 
   // create a short description of the payment
-  var short_description = 'stakepact donation for failing to ' + commitment.activity + ' ' + commitment.duration + ' times between ' + reportingPeriod.startDay + ' and ' + reportingPeriod.endDay;
+  var short_description = 'stakepact donation for failing to ' + commitment.activity + ' ' + commitment.duration + ' times for the week of ' + reportingPeriod;
   
   var params = {
-    'account_id': charity.account_id,
+    'account_id': charity.wepay.account_id,
     'short_description': short_description,
     'type': 'DONATION',
-    'payment_method_type': credit_card,
+    'payment_method_type': 'credit_card',
     'payment_method_id': decryptedCreditCardId,
     'fee_payer': 'payee',
     'amount': commitment.stakes.ammount,
@@ -324,25 +320,27 @@ createWePayCheckout = function(commitmentId, reportingPeriod) {
   var encryptedAccessToken = charity.wepay.access_token;
   var decryptedAccessToken = OAuthEncryption.isSealed(encryptedAccessToken) ? OAuthEncryption.open(encryptedAccessToken) : encryptedAccessToken;
   wp.set_access_token(decryptedAccessToken);
-  wp.call('/checkout/create', params,
-    function(response) {
-      if(err){
-        console.log(err);
-        throw new Meteor.Error("wepay-checkout", err);
-      }
-      try{
-        response = JSON.parse(String(res));
-        console.log(response);
-        
-        // everything worked -- checkout successful. give yourself a high-five!
-        return(response);
 
-      } catch(e) {
-        console.log(e);
-        throw new Meteor.Error('parse-failed');
-      }
+  var fut = new Future();
+
+  wp.call('/checkout/create', params, Meteor.bindEnvironment(function(res, err) {
+    if(err){
+      console.log('error', err);
+      fut.throw(new Meteor.Error("wepay-checkout", err), null);
     }
-  );
+    try{
+      response = JSON.parse(String(res));
+
+      // everything worked -- checkout successful. give yourself a high-five!
+      fut.return(response);
+
+    } catch(e) {
+      console.log(e);
+      fut.throw(new Meteor.Error('parse-failed'), null);
+    }
+  }));
+
+  return fut.wait();
 };
 
 // // creates embedded preapproval -- replaced with credit card tokenizing

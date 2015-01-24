@@ -99,6 +99,13 @@
     function prepNotificationForMongo(context){
       if(context.enabled){
         // update the model ~ a more sophisticated model should do this in a watch function
+        
+        // if daily is set, enable all days
+        if(context.frequency === 'daily'){
+          _.each(context.times, function(obj){
+            obj.enabled = true;
+          });
+        }
         _.each(context.times, function(obj){
           obj.hour = context.hour;
           obj.minute = 0;
