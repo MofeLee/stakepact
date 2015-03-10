@@ -1,9 +1,9 @@
 (function() {
   angular.module('app').controller('CharitiesListCtrl', CharitiesListCtrl);
 
-  CharitiesListCtrl.$inject = ['$log', '$meteorCollection', '$scope', '$state', 'authService', 'adminRoles'];
+  CharitiesListCtrl.$inject = ['$log', '$meteor', '$scope', '$state', 'authService', 'adminRoles'];
 
-  function CharitiesListCtrl($log, $meteorCollection, $scope, $state, authService, adminRoles) {
+  function CharitiesListCtrl($log, $meteor, $scope, $state, authService, adminRoles) {
     var vm = this;
     vm.activate = activate;
     vm.removeCharity = removeCharity;
@@ -15,7 +15,7 @@
     
     function activate(){
       // reroute user to signup if logout mid session
-      $scope.$on('loggingIn', function(loggedIn){
+      $scope.$on('currentUser', function(currentUser){
         authService.getLoginStatus(adminRoles).then(
           function(user){
 
@@ -27,7 +27,7 @@
       });
 
       // bind to Charities collection
-      $scope.charities = $meteorCollection(Charities, false).subscribe("charities");
+      $scope.charities = $meteor.collection(Charities, false).subscribe("charities");
     }
 
     function removeCharity(charity){

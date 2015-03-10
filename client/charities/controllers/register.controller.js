@@ -1,9 +1,9 @@
 (function() {
   angular.module('app').controller('RegisterCtrl', RegisterCtrl);
 
-  RegisterCtrl.$inject = ['$log', '$state', '$scope', '$meteorCollection', 'utilityService', 'authService', 'subscriptionService'];
+  RegisterCtrl.$inject = ['$log', '$state', '$scope', '$meteor', 'utilityService', 'authService'];
 
-  function RegisterCtrl($log, $state, $scope, $meteorCollection, utilityService, authService, subscriptionService) {
+  function RegisterCtrl($log, $state, $scope, $meteor, utilityService, authService) {
     var vm = this;
     vm.activate = activate;
     vm.isValidEIN = isValidEIN;
@@ -19,12 +19,12 @@
 
     // activate the controller
     function activate() {
-
+      console.log("on the page");
       // reroute user to signup if logout mid session
-      $scope.$on('loggingIn', function(loggingIn){
+      $scope.$on('currentUser', function(currentUser){
         authService.getLoginStatus().then(
           function(user){
-            $scope.charities = $meteorCollection(Charities, false).subscribe("my_charities");
+            $scope.charities = $meteor.collection(Charities, false).subscribe("my_charities");
           },
           function(error){
             $state.go('create.signup', {'redirect_uri' : $state.current.url});

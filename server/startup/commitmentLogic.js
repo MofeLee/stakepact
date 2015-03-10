@@ -1,13 +1,64 @@
+// possibly integrate updateNotifications into commitments.js in an autovalue
+Meteor.methods({
+  updateNotifications: function(commitmentId, notifications){
+    check(commitmentId, String);
+    check(notifications, Schema.Notifications);
+
+    var commitment = Commitments.findOne(commitmentId);
+    if(!commitment){
+      throw new Meteor.Error('commitment not found');
+    }
+
+    // check for authorization to update commitment
+    var loggedInUser = Meteor.user();
+    if (!loggedInUser ||
+        (!Roles.userIsInRole(loggedInUser, ['manage-users','admin']) && 
+        (!commitment.owner || commitment.owner != loggedInUser._id))) {
+      throw new Meteor.Error(403, "Access denied");
+    }
+
+    if(notifications.alerts && notifications.alerts.schedule){
+      notifications.alerts.notifications = createNotifications(notifications.alerts.schedule, 2);
+    }
+
+    if(notifications.reminders && notifications.reminders.schedule){
+      notifications.reminders.notifications = createNotifications(notifications.reminders.schedule, 2);
+    }
+
+    function createNotifications(schedule, buffer){
+      buffer = buffer? buffer: 0;
+
+      var timezone = commitment.timezone ? commitment.timezone : 'America/Los_Angeles'; // default to PST
+
+      var n = [];
+      // loop through each active week and set the alert
+      var endTime = moment(commitment.expiresAt).add(buffer, 'weeks');
+      for (var m = moment().tz(timezone).startOf("day"); m.isBefore(endTime); m.add(1, "weeks")) {
+        var weekly = _.map(schedule, function(el){
+          var utcTime = moment(el.time).utc();
+          var days = (utcTime.day() >= m.day()) ? utcTime.day() : utcTime.day() + 7;
+          return {contactType: el.contactType, time: m.clone().day(days).hour(utcTime.hours()).minute(utcTime.minutes()).toDate()};
+        });
+        n = n.concat(weekly);
+      }
+      return n;
+    }
+
+    return Commitments.update({_id: commitmentId}, {$set: {'notifications': notifications}});
+  }
+});
+
 // after updating a commitment
 // automatically insert/remove/update associated transactions
 Commitments.after.update(function (userId, doc, fieldNames, modifier, options) {
+  console.log(fieldNames);
+  console.log(modifier);
 
   // if stakes are removed, remove all pending transactions
   // if stakes are modified, pending transactions don't store any stakes data so no changes
   // this means if you change the stakes, it will affect all pending transactions
   if(_.contains(fieldNames, 'stakes') && !doc.stakes){
-    Transactions.remove({commitment: doc._id, pending: true});
-    return;
+    return Transactions.remove({commitment: doc._id, pending: true});
   }
 
   // if checkins, frequency, duration, or stakes are modified and at some point there were stakes, update pending transactions
@@ -40,6 +91,7 @@ function updatePendingTransactions(doc){
       pending: true
     };
   });
+  
   if(newTransactionObjects.length){
     console.log(newTransactionObjects);
     _.each(newTransactionObjects, function(transaction){

@@ -2,7 +2,7 @@
   <base href="/">
 </head>
 <body>
-  <div ng-app='app' ng-cloak>
+  <div ng-app='app' ng-cloak ng-strict-di ng-csp>
     <meteor-include src="loginButtons"></meteor-include>
     <h3>
       <a ui-sref="charities.list">Charities</a>

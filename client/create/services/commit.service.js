@@ -4,13 +4,13 @@
 
   angular.module('app').factory('commitService', commitService);
 
-  commitService.$inject = ['$q', 'utilityService', '$meteorCollection', '$meteorMethods', '$meteorObject', '$meteorSubscribe'];
+  commitService.$inject = ['$q', 'utilityService', '$meteor'];
 
-  function commitService($q, utilityService, $meteorCollection, $meteorMethods, $meteorObject, $meteorSubscribe) {
+  function commitService($q, utilityService, $meteor) {
     
     var commitment, commitments;
-    $meteorSubscribe.subscribe('my_commitments').then(function(subscriptionHandle){
-      commitments = $meteorCollection(Commitments, false).subscribe('my_commitments');
+    $meteor.subscribe('my_commitments').then(function(subscriptionHandle){
+      commitments = $meteor.collection(Commitments, false).subscribe('my_commitments');
     }); // there is a delay if you do $meteorCollection.subscribe, so use $meteorSubscribe.then instead
     var frequencies = ["1x weekly", "2x weekly", "3x weekly", "4x weekly", "5x weekly", "6x weekly", "daily"];
 
@@ -41,7 +41,7 @@
       if(commitment._id){
         commitments.remove(commitment._id).then(function(result){
           
-          var user = $meteorObject(Meteor.users, Meteor.userId(), false).subscribe('my_data');
+          var user = $meteor.object(Meteor.users, Meteor.userId(), false).subscribe('my_data');
           user.commitments = _.without(user.commitments, commitment._id);
           user.save();
 
@@ -100,16 +100,16 @@
     }
 
     function setCheckins(commitmentId, dates){
-      var defer = $q.defer();
-      var currentCommitment = $meteorObject(Commitments, commitmentId, false);
+      console.log("this is when it happens");
+      var currentCommitment = $meteor.object(Commitments, commitmentId, false);
       currentCommitment.dates = dates;
-      currentCommitment.save();
+      return currentCommitment.save();
     }
 
     function setCommitment(id){
       var defer = $q.defer();
-      commitment = $meteorSubscribe.subscribe('my_commitments').then(function(subscriptionHandle){
-        commitment = $meteorObject(Commitments, id, false);
+      commitment = $meteor.subscribe('my_commitments').then(function(subscriptionHandle){
+        commitment = $meteor.object(Commitments, id, false);
         defer.resolve(commitment);
       });
       return defer.promise;
@@ -134,11 +134,11 @@
       }else{
 
         if(Meteor.userId()){  // if user exists, push new commitment to mongo and add to user commitments
-          var user = $meteorObject(Meteor.users, Meteor.userId(), false).subscribe('my_data');
+          var user = $meteor.object(Meteor.users, Meteor.userId(), false).subscribe('my_data');
           commitment.owner = Meteor.userId();
           commitment.timezone = user.timezone? user.timezone : jstz.determine().name();
           commitments.save(commitment).then(function(result){
-            commitment = $meteorObject(Commitments, result[0]._id, false);
+            commitment = $meteor.object(Commitments, result[0]._id, false);
             if(user.commitments){
               user.commitments.push(commitment._id);
             } else {
@@ -162,11 +162,14 @@
     // set notifications for the commitment
     function setNotifications(notifications){
       var d = $q.defer();
+      
+      console.log(notifications);
 
       if(commitment._id){
         if(notifications){
-          commitment.notifications = notifications;
-          return commitment.save();
+          return $meteor.call('updateNotifications', commitment._id, notifications);
+          // commitment.notifications = notifications;
+          // return commitment.save();
         } else {
           commitment.notifications = null;
           return commitment.save();
@@ -199,7 +202,7 @@
     function switchCommitment(commitmentId){
       var defer = $q.defer;
       if(Meteor.userId()){
-        commitment = $meteorObject(Commitments, commitmentId, false);
+        commitment = $meteor.object(Commitments, commitmentId, false);
         defer.resolve();
       }else{
         defer.reject("user must be logged in to switch commitments");

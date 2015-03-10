@@ -3,9 +3,9 @@
 
   angular.module('app').controller('NotificationsCtrl', NotificationsCtrl);
 
-  NotificationsCtrl.$inject = ['$meteorSubscribe', '$meteorCollection', '$meteorObject', '$q', '$scope', '$state', '$stateParams', 'commitment', 'authService', 'commitService', 'utilityService'];
+  NotificationsCtrl.$inject = ['$meteor', '$q', '$scope', '$state', '$stateParams', 'commitment', 'authService', 'commitService', 'utilityService'];
 
-  function NotificationsCtrl($meteorSubscribe, $meteorCollection, $meteorObject, $q, $scope, $state, $stateParams, commitment, authService, commitService, utilityService){
+  function NotificationsCtrl($meteor, $q, $scope, $state, $stateParams, commitment, authService, commitService, utilityService){
     var vm = this;
     
     vm.commitment = commitment;
@@ -31,11 +31,11 @@
       vm.phoneNumber = Meteor.user().phone;
 
       if(vm.stakes && vm.stakes.charity) {
-        $scope.selectedCharity = $meteorObject(Charities, vm.stakes.charity, false).subscribe('charities', 'verified');
+        $scope.selectedCharity = $meteor.object(Charities, vm.stakes.charity, false).subscribe('charities', 'verified');
       }
 
       // reroute user to signup if logout mid session
-      $scope.$on('loggingIn', function(loggingIn){
+      $scope.$on('currentUser', function(currentUser){
         authService.getLoginStatus().then(
           function(user){
             // this should only be reached if the user is modified for some weird reason
@@ -50,6 +50,7 @@
         vm.reminders = setDefaultSettings();
         vm.alerts = setDefaultSettings();
       } else {
+        console.log(vm.notifications);
         vm.reminders = prepNotificationForUI(vm.notifications.reminders);
         vm.alerts = prepNotificationForUI(vm.notifications.alerts);
       }
@@ -62,29 +63,28 @@
     // convert mongo data to pretty UI/UX
     function prepNotificationForUI(notifications){
       var context = {};
-      if(notifications && notifications.length > 0){
-
-        context.contactType = notifications[0].contactType; // take the first element's contactType because right now we set all of them at once
-        context.frequency = (notifications.length === 7)? 'daily': 'weekly';
+      if(notifications && notifications.schedule && notifications.schedule.length > 0){
+        context.contactType = notifications.schedule[0].contactType; // take the first element's contactType because right now we set all of them at once
+        context.frequency = (notifications.schedule.length === 7)? 'daily': 'weekly';
         context.enabled = true;
-        var hours = moment(notifications[0].time).diff(moment.utc(0), 'hours');
-        context.am = hours < 12;
-        context.hours = hours % 12;
+        var hour = moment(notifications.schedule[0].time).utc().hour();
+        context.am = hour < 12;
+        context.hour = hour % 12;
 
         // set the times for the notifications
         context.times = [];
         for(var i = 0; i<7; i++){
           context.times[i] = {
             enabled: false,
-            hour: context.hours,
+            hour: context.hour,
             minute: 0,
             am: context.am
           };
         }
 
         // enable all notifications that are stored in mongo
-        _.each(notifications, function(obj){
-          var i = moment.utc(obj.time).diff(moment.utc(0), 'days');
+        _.each(notifications.schedule, function(obj){
+          var i = moment.utc(obj.time).day()=== 0? 6: moment.utc(obj.time).day() - 1; // set the day (sunday = 0)
           var time = context.times[i];
           time.enabled = true;
         });
@@ -106,6 +106,7 @@
             obj.enabled = true;
           });
         }
+
         _.each(context.times, function(obj){
           obj.hour = context.hour;
           obj.minute = 0;
@@ -117,12 +118,13 @@
         _.each(context.times, function(obj, index){
           if(obj.enabled){
             result.push({
-              time: moment.utc(0).add(index, 'days').add(parseInt(obj.hour) + (obj.am? 0 : 12), 'hours').toDate(),
+              time: moment.utc(0).day('Monday').add(index, 'days').add(parseInt(obj.hour) + (obj.am? 0 : 12), 'hours').toDate(),
               contactType: context.contactType
             });
           }
         });
-        return result;
+
+        return {schedule: result};
       } else {
         return null;
       }
@@ -178,7 +180,7 @@
 
       // set the notifications for the commitment, then redirect to the dashboard
       commitService.setNotifications(settings).then(function(){
-        $state.go('dashboard');
+        //$state.go('dashboard');
       }, function(err){
         console.log(err);
       });

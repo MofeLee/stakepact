@@ -3,9 +3,9 @@
 
   angular.module('app').controller('DashboardCtrl', DashboardCtrl);
 
-  DashboardCtrl.$inject = ['$meteorCollection', '$meteorObject', '$scope', '$state', 'authService', 'commitService', 'utilityService', 'commitments'];
+  DashboardCtrl.$inject = ['$meteor', '$scope', '$state', 'authService', 'commitService', 'utilityService', 'commitments'];
 
-  function DashboardCtrl($meteorCollection, $meteorObject, $scope, $state, authService, commitService, utilityService, commitments){
+  function DashboardCtrl($meteor, $scope, $state, authService, commitService, utilityService, commitments){
     var vm = this;
     vm.activate = activate;
     vm.dateModel = {
@@ -25,7 +25,7 @@
 
     function activate(){
       $scope.commitments = commitments;
-      $scope.commitment = $meteorObject(Commitments, $scope.commitments[0], false);
+      $scope.commitment = $meteor.object(Commitments, $scope.commitments[0]._id, false);
       $scope.commitmentString = commitService.getCommitmentString($scope.commitment);
       $scope.stakes = {
         charityName: "NRA TEST",
@@ -44,7 +44,7 @@
       });
 
       // reroute user to signup if logout mid session
-      $scope.$on('loggingIn', function(loggedIn){
+      $scope.$on('currentUser', function(currentUser){
         authService.getLoginStatus().then(
           function(user){
 

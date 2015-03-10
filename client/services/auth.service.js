@@ -1,37 +1,33 @@
 (function(){
-  angular.module('app').service('authService', authService);
+  angular.module('app').factory('authService', authService);
 
   authService.$inject = ['$rootScope', '$q', '$meteorObject', '$meteorSubscribe'];
 
   function authService($rootScope, $q, $meteorObject, $meteorSubscribe){
-    var vm = this;
-    var currentId;
+    return {
+      getLoginStatus: getLoginStatus
+    };
 
-    vm.getLoginStatus = function(roles){
+    function getLoginStatus(roles){
       var defer = $q.defer();
-
-      var watcher = $rootScope.$watch('loggingIn', function(loggingIn){
-        if(!loggingIn){
-          if($rootScope.currentUser){
-            if(roles){
-              if($rootScope.currentUser.roles && $rootScope.currentUser.roles.__global_roles__ && _.intersection($rootScope.currentUser.roles.__global_roles__, roles).length > 0)
-              {
-                defer.resolve($rootScope.currentUser);
-              }else{
-                defer.reject({status: 401, description: 'unauthorized'});
-              }
+      $rootScope.currentUserPromise.then(function(currentUser){
+        if(currentUser){
+          if(roles){
+            if(currentUser.roles && currentUser.roles.__global_roles__ && _.intersection(currentUser.roles.__global_roles__, roles).length > 0){
+              defer.resolve(currentUser);
             }else{
-              defer.resolve($rootScope.currentUser);
+              defer.reject({status: 401, description: 'unauthorized'});
             }
           }else{
-            currentId = null;
-            defer.reject({status: 401, description: 'unauthorized'});
+            defer.resolve(currentUser);
           }
-          watcher();  // end the watcher if not loggingIn
+        }else{
+          defer.reject({status: 401, description: 'unauthorized'});
         }
+      }, function(err){
+        defer.reject(err);
       });
-
       return defer.promise;
-    };
+    }
   }
 })();

@@ -3,9 +3,9 @@
 
   angular.module('app').controller('StakesCtrl', StakesCtrl);
 
-  StakesCtrl.$inject = ['$q','$scope', '$meteorCollection', '$meteorSubscribe', '$state', '$stateParams', 'authService', 'commitService', 'scriptLoaderService', 'utilityService', 'commitment', 'wepayClientId'];
+  StakesCtrl.$inject = ['$q','$scope', '$meteor', '$state', '$stateParams', 'authService', 'commitService', 'scriptLoaderService', 'utilityService', 'commitment', 'wepayClientId'];
 
-  function StakesCtrl($q, $scope, $meteorCollection, $meteorSubscribe, $state, $stateParams, authService, commitService, scriptLoaderService, utilityService, commitment, wepayClientId){
+  function StakesCtrl($q, $scope, $meteor, $state, $stateParams, authService, commitService, scriptLoaderService, utilityService, commitment, wepayClientId){
     var vm = this;
     vm.activate = activate;
     vm.clearStakes = clearStakes;
@@ -26,8 +26,8 @@
         vm.hasCreditCardId = res;
       });
 
-      $meteorSubscribe.subscribe('charities', 'verified').then(function(){
-        $scope.charities = $meteorCollection(Charities, false);
+      $meteor.subscribe('charities', 'verified').then(function(){
+        $scope.charities = $meteor.collection(Charities, false);
 
         if(vm.stakes && vm.stakes.charity){
           vm.showStakes = true;
@@ -37,7 +37,7 @@
         }
       });
 
-      $scope.$on('loggingIn', function(loggedIn){
+      $scope.$on('currentUser', function(currentUser){
         authService.getLoginStatus().then(
           function(user){
             // should already be logged in to view page
@@ -56,15 +56,7 @@
     }
 
     function hasCreditCardId(){
-      var defer = $q.defer();
-      Meteor.call('hasCreditCardId', Meteor.userId(), function(error, res){
-        if(error){
-          defer.reject(error);
-        }else{
-          defer.resolve(res);
-        }
-      });
-      return defer.promise;
+      return $meteor.call('hasCreditCardId', Meteor.userId());
     }
 
     function isCompleteCreditCardInfo(){

@@ -1,4 +1,4 @@
-angular.module('app').directive("editInline", function($window){
+angular.module('app').directive("editInline", ['$window', function($window){
   return function(scope, element, attr){
   // a method to update the width of an input
   // based on it's value.
@@ -66,4 +66,4 @@ angular.module('app').directive("editInline", function($window){
     });
 
   };
-});
+}]);

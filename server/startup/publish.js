@@ -15,6 +15,8 @@ Meteor.publish("my_data", function () {
 
 // server: publish the charity collection with barebones info, unless admin
 Meteor.publish("charities", function(channel_name) {
+  check(channel_name, Match.OneOf(String, undefined, null));
+
   var channel = {};
   if(channel_name === "verified"){
     channel = {verified: true, wepay: {$exists: true}};
@@ -45,7 +47,8 @@ Meteor.publish("my_commitments", function() {
 });
 
 // server: publish all the commitments for admin only
-Meteor.publish("commitments", function(channel_name) {
+Meteor.publish("commitments", function() {
+  
   var channel = {};
   
   if(Roles.userIsInRole(this.userId, ['manage-users','admin'])){

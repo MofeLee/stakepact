@@ -26,3 +26,5 @@ kevbuk:moment-range
 
 mrt:moment-timezone
 global-constants
+audit-argument-checks
+meteorhacks:kadira

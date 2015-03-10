@@ -6,6 +6,16 @@ Meteor.methods({
    * @param {Number} weeksBeforeToday number of weeks preceeding today to test (optional)
    */ 
   getSuccessReport: function(commitment, weeksBeforeToday){
+    check(commitment, Schema.Commitment);
+    check(weeksBeforeToday, Number);
+
+    // check for authorization to get success report
+    var loggedInUser = Meteor.user();
+    if (!loggedInUser ||
+        (!Roles.userIsInRole(loggedInUser, ['manage-users','admin']) && 
+        (!commitment.owner || commitment.owner != loggedInUser._id))) {
+      throw new Meteor.Error(403, "Access denied");
+    }
 
     var endDate = moment.min(moment().startOf('day'), moment(commitment.createdAt).add(commitment.duration, 'weeks').startOf('day'));  // test up to today or the last active day for expired commitments
 

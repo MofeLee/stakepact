@@ -1,9 +1,9 @@
 (function() {
   angular.module('app').controller('CharityCtrl', CharityCtrl);
 
-  CharityCtrl.$inject = ['$window', '$state', '$stateParams', '$meteorObject', '$scope', 'angularLoad', 'wepayClientId', 'charity', 'authService'];
+  CharityCtrl.$inject = ['$window', '$state', '$stateParams', '$meteor', '$scope', 'angularLoad', 'wepayClientId', 'charity', 'authService'];
 
-  function CharityCtrl($window, $state, $stateParams, $meteorObject, $scope, angularLoad, wepayClientId, charity, authService) {
+  function CharityCtrl($window, $state, $stateParams, $meteor, $scope, angularLoad, wepayClientId, charity, authService) {
     var vm = this;
     vm.activate = activate;
     vm.buttonTriggered = false;
@@ -14,7 +14,7 @@
     /////////////////////
 
     function activate(){
-      $scope.$on('loggingIn', function(loggedIn){
+      $scope.$on('currentUser', function(currentUser){
         authService.getLoginStatus().then(
           function(user){
             // confirm user can still view charity -- should never reach here, but just in case
@@ -28,7 +28,7 @@
         );
       });
 
-      $scope.charity = $meteorObject(Charities, $stateParams.charityId, false);
+      $scope.charity = $meteor.object(Charities, $stateParams.charityId, false);
 
       // watch for changes to charity
       // if no wepay account, set the wepay oauth2 button when the charity loads
@@ -74,9 +74,10 @@
               if (data.code.length !== 0) {
                 // send the data to the server
                 data.redirect_uri = document.URL;
-                Meteor.call('createWePayAccount', $scope.charity._id, data, function (error, result) {
-                  console.log(error);
-                  console.log(result);
+                $meteor.call('createWePayAccount', $scope.charity._id, data).then(function(res) {
+                  console.log(res);
+                }, function(err){
+                  console.log(err);
                 });
               } else {
                 // an error has occurred and will be in data.error
@@ -92,18 +93,16 @@
     }
 
     function setWepayUpdate(){
-      Meteor.call('getWePayUpdateURI', $scope.charity._id, document.URL, function(error, result){
-        if(error){
+      $meteor.call('getWePayUpdateURI', $scope.charity._id, document.URL).then(function(res){
+        console.log(result);
+        angularLoad.loadScript("https://www.wepay.com/min/js/iframe.wepay.js").then(function() {
+          $window.location.href = result.uri;
+        }).catch(function(error) {
+          // There was some error loading the script. Meh
           console.log(error);
-        }else{
-          console.log(result);
-          angularLoad.loadScript("https://www.wepay.com/min/js/iframe.wepay.js").then(function() {
-            $window.location.href = result.uri;
-          }).catch(function(error) {
-            // There was some error loading the script. Meh
-            console.log(error);
-          });
-        }
+        });
+      }, function(err){
+        console.log(err);
       });
     }
   }

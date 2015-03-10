@@ -8,7 +8,11 @@ Package.describe({
 Package.onUse(function(api) {
   api.versionsFrom('1.0.2.1');
   api.export('Future');
-  api.export('test');
+  api.export('Schema');
+  api.export('vsprintf');
+  api.export('sprintf');
+  api.export('nodemailer');
+  api.export('wepay');
   api.addFiles('global-constants.js');
 });
 
@@ -19,4 +23,8 @@ Package.onTest(function(api) {
 });
 
 /* This lets you use npm packages in your package*/
-Npm.depends({});
+Npm.depends({
+  "wepay": "0.0.4",
+  "nodemailer": "1.3.0",
+  "sprintf-js": "1.0.2"
+});

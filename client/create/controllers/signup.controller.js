@@ -17,7 +17,7 @@
       vm.commitmentString = commitService.getCommitmentString();
 
       // reroute user on login/signup
-      $scope.$on('loggingIn', function(){
+      $scope.$on('currentUser', function(currentUser){
         authService.getLoginStatus().then(function(){
           var commitment = commitService.getCommitment();
           if($stateParams.create_commitment && commitment && !commitment._id){  // upload commitment if param is passed and commitment isn't in mongo 

@@ -1,10 +1,15 @@
-angular.module("app").run(function($rootScope, $state) {
+angular.module("app").run(['$rootScope', '$state', '$meteor', function($rootScope, $state, $meteor) {
+  
   // watch the currentUser for changes and broadcast when currentUser logs in/out or changes ids
-  var latestUser = $rootScope.currentUser;
-  $rootScope.$watch('currentUser', function(currentUser){
-    if((!latestUser && currentUser) || (latestUser && !currentUser) || (latestUser && currentUser && latestUser._id != currentUser._id)){
-      latestUser = currentUser;
-      $rootScope.$broadcast('loggingIn');
+  $rootScope.$watch('currentUser', function(currentUser, previousState){
+    if(currentUser && !$rootScope.subscriptionHandle){
+      $meteor.subscribe('my_data').then(function(subscriptionHandle){
+        $rootScope.subscriptionHandle = subscriptionHandle;
+        $rootScope.$broadcast('currentUser');
+      });
+    }else if(!currentUser){
+      $rootScope.subscriptionHandle = null;
+      $rootScope.$broadcast('currentUser');
     }
   });
 
@@ -49,7 +54,7 @@ angular.module("app").run(function($rootScope, $state) {
       }
     }
   });
-});
+}]);
 
 angular.module("app").config(['$urlRouterProvider', '$stateProvider', '$locationProvider',
   function($urlRouterProvider, $stateProvider, $locationProvider){
@@ -61,7 +66,7 @@ angular.module("app").config(['$urlRouterProvider', '$stateProvider', '$location
     $stateProvider
       .state('dashboard', {
         url: '/dashboard',
-        templateUrl: 'client/dashboard/views/dashboard.tpl',
+        templateUrl: 'client/dashboard/views/dashboard.ng.html',
         controller: 'DashboardCtrl',
         controllerAs: 'dashboardctrl',
         resolve: {
@@ -69,10 +74,10 @@ angular.module("app").config(['$urlRouterProvider', '$stateProvider', '$location
             var response = authService.getLoginStatus();
             return response;
           },
-          commitments: function($q, $meteorSubscribe, $meteorCollection){
+          commitments: function($q, $meteor){
             var defer = $q.defer();
-            $meteorSubscribe.subscribe('my_commitments').then(function(subscriptionHandle){
-              var commitments = $meteorCollection(Commitments, false);
+            $meteor.subscribe('my_commitments').then(function(subscriptionHandle){
+              var commitments = $meteor.collection(Commitments, false);
               if(commitments.length > 0)
                 defer.resolve(commitments);
               else
@@ -89,7 +94,7 @@ angular.module("app").config(['$urlRouterProvider', '$stateProvider', '$location
       })
       .state('charities.list', {
         url: '',
-        templateUrl: 'client/charities/views/charities-list.tpl',
+        templateUrl: 'client/charities/views/charities-list.ng.html',
         controller: 'CharitiesListCtrl',
         controllerAs: 'charitieslistctrl',
         resolve: {
@@ -100,7 +105,7 @@ angular.module("app").config(['$urlRouterProvider', '$stateProvider', '$location
       })
       .state('charities.charity', {
         url: '/:charityId',
-        templateUrl: 'client/charities/views/charity.tpl',
+        templateUrl: 'client/charities/views/charity.ng.html',
         controller: 'CharityCtrl',
         controllerAs: 'charityctrl',
         resolve: {
@@ -127,7 +132,7 @@ angular.module("app").config(['$urlRouterProvider', '$stateProvider', '$location
       })
       .state('register', {
         url: '/register',
-        templateUrl: 'client/charities/views/register.tpl',
+        templateUrl: 'client/charities/views/register.ng.html',
         controller: 'RegisterCtrl',
         controllerAs: 'registerctrl',
         resolve: {
@@ -143,7 +148,7 @@ angular.module("app").config(['$urlRouterProvider', '$stateProvider', '$location
       })
       .state('create.commit', {
         url: '/commit?modify',
-        templateUrl: 'client/create/views/commit.tpl',
+        templateUrl: 'client/create/views/commit.ng.html',
         controller: 'CommitCtrl',
         controllerAs: 'commitctrl',
         resolve: {
@@ -158,7 +163,7 @@ angular.module("app").config(['$urlRouterProvider', '$stateProvider', '$location
       })
       .state('create.signup', {
         url: '/signup?redirect_uri&create_commitment',
-        templateUrl: 'client/create/views/signup.tpl',
+        templateUrl: 'client/create/views/signup.ng.html',
         controller: 'SignupCtrl',
         controllerAs: 'signupctrl',
         resolve: {
@@ -176,7 +181,7 @@ angular.module("app").config(['$urlRouterProvider', '$stateProvider', '$location
       })
       .state('create.stakes', {
         url: '/stakes?modify',
-        templateUrl: 'client/create/views/stakes.tpl',
+        templateUrl: 'client/create/views/stakes.ng.html',
         controller: 'StakesCtrl',
         controllerAs: 'stakesctrl',
         resolve: {
@@ -205,7 +210,7 @@ angular.module("app").config(['$urlRouterProvider', '$stateProvider', '$location
       })
       .state('create.notifications', {
         url: '/notifications?modify',
-        templateUrl: 'client/create/views/notifications.tpl',
+        templateUrl: 'client/create/views/notifications.ng.html',
         controller: 'NotificationsCtrl',
         controllerAs: 'notificationsctrl',
         resolve: {
@@ -234,7 +239,7 @@ angular.module("app").config(['$urlRouterProvider', '$stateProvider', '$location
       })
       .state('unauthorized', {
         url: '/401',
-        templateUrl: 'client/error/views/401.tpl',
+        templateUrl: 'client/error/views/401.ng.html',
       })
       .state('404', {
         url: '/404',
